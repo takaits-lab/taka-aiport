@@ -169,7 +169,7 @@
     <div class="logo-mark">AI</div>
     <div>
       <div class="header-title">AI情報ダッシュボード</div>
-      <div class="header-sub">Claude Code · エージェント工学</div>
+      <div class="header-sub">AI技術の総合情報収集</div>
     </div>
   </div>
   <div class="header-right">
@@ -240,9 +240,12 @@
             <option value="" disabled selected>カテゴリーを選択</option>
             <option value="LLM・基盤モデル">LLM・基盤モデル</option>
             <option value="エージェント工学">エージェント工学</option>
-            <option value="プロンプトエンジニアリング">プロンプトエンジニアリング</option>
+            <option value="AIコーディング支援">AIコーディング支援</option>
+            <option value="AI運用・自動化">AI運用・自動化</option>
+            <option value="AI検索・リサーチ">AI検索・リサーチ</option>
             <option value="AI活用事例">AI活用事例</option>
-            <option value="開発ツール・IDE">開発ツール・IDE</option>
+            <option value="AIガバナンス・セキュリティ">AIガバナンス・セキュリティ</option>
+            <option value="プロンプトエンジニアリング">プロンプトエンジニアリング</option>
             <option value="その他">その他</option>
           </select>
           <button class="kw-add-btn" id="kw-add-btn" onclick="addNewKeyword()">＋ キーワードを追加</button>
@@ -317,8 +320,8 @@
       <div class="guide-section">
         <div class="guide-section-title"><span class="section-icon"></span>このダッシュボードについて</div>
         <p class="guide-text">
-          AI技術・エージェント工学の情報収集ダッシュボードです。<br>
-          Googleニュースと海外ブログRSSから、Claude Code・LLM・AI活用などに関する記事を<strong>毎朝自動で収集</strong>し、<strong>AIが自動で分類・要約・重要度判定</strong>を行います。<br>
+          AI技術の総合情報収集ダッシュボードです。<br>
+          Googleニュースと海外ブログRSSから、ChatGPT・Gemini・Claude・Perplexity・GitHub Copilotなど各種AIツールの最新情報を<strong>毎朝自動で収集</strong>し、<strong>AIが自動で分類・要約・重要度判定</strong>を行います。<br>
           英語の記事も日本語で要約されるので、海外の一次情報を素早くキャッチアップできます。
         </p>
       </div>
@@ -368,7 +371,7 @@
           <div class="guide-step-num">2</div>
           <div class="guide-step-body">
             <div class="guide-step-title">カテゴリーを選択</div>
-            <div class="guide-step-desc">そのキーワードで集まる記事をどのカテゴリーに分類するか選びます。<br>（LLM・基盤モデル / エージェント工学 / プロンプトエンジニアリング / AI活用事例 / 開発ツール・IDE / その他）</div>
+            <div class="guide-step-desc">そのキーワードで集まる記事をどのカテゴリーに分類するか選びます。<br>（LLM・基盤モデル / エージェント工学 / AIコーディング支援 / AI運用・自動化 / AI検索・リサーチ / AI活用事例 / AIガバナンス・セキュリティ / プロンプトエンジニアリング / その他）</div>
           </div>
         </div>
         <div class="guide-step">
@@ -636,9 +639,13 @@ var currentStars  = 'all-stars';
 var CAT_COLORS = {
   'LLM・基盤モデル':            {bg:'#eff6ff',text:'#2563eb',dot:'#3b82f6'},
   'エージェント工学':            {bg:'#ecfdf5',text:'#059669',dot:'#10b981'},
-  'プロンプトエンジニアリング':    {bg:'#f5f3ff',text:'#7c3aed',dot:'#8b5cf6'},
+  'AIコーディング支援':          {bg:'#fef2f2',text:'#dc2626',dot:'#ef4444'},
+  'AI運用・自動化':             {bg:'#fff7ed',text:'#c2410c',dot:'#f97316'},
+  'AI検索・リサーチ':           {bg:'#e0f2fe',text:'#0369a1',dot:'#0ea5e9'},
   'AI活用事例':                 {bg:'#fefce8',text:'#ca8a04',dot:'#f59e0b'},
-  '開発ツール・IDE':            {bg:'#fef2f2',text:'#dc2626',dot:'#ef4444'},
+  'AIガバナンス・セキュリティ':   {bg:'#fdf2f8',text:'#be185d',dot:'#ec4899'},
+  'プロンプトエンジニアリング':    {bg:'#f5f3ff',text:'#7c3aed',dot:'#8b5cf6'},
+  '開発ツール・IDE':            {bg:'#f1f5f9',text:'#475569',dot:'#64748b'},
   'その他':                     {bg:'#f0efe9',text:'#6b6960',dot:'#a09e93'},
 };
 function getCatColor(cat){return CAT_COLORS[cat]||{bg:'#f0efe9',text:'#6b6960',dot:'#a09e93'}}
