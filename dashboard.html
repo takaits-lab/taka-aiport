@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI情報ダッシュボード</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#1a2744; --navy-light:#253561;
+    --rose:#3b82f6; --rose-light:#eff6ff;
+    --gold:#f59e0b; --gold-light:#fefce8;
+    --teal:#10b981; --teal-light:#ecfdf5;
+    --lavender:#8b5cf6; --lavender-light:#f5f3ff;
+    --gray-50:#f8f8f6; --gray-100:#f0efe9;
+    --gray-200:#e4e3db; --gray-400:#a09e93;
+    --gray-600:#6b6960; --gray-800:#33322e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Noto Sans JP',sans-serif;background:var(--gray-50);color:#1e1d1a;min-height:100vh}
+
+  .header{background:var(--navy);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
+  .header-left{display:flex;align-items:center;gap:14px}
+  .logo-mark{width:34px;height:34px;background:var(--rose);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif JP',serif;font-size:12px;color:white;font-weight:600}
+  .header-title{font-family:'Noto Serif JP',serif;font-size:17px;color:white;font-weight:600;letter-spacing:.05em}
+  .header-sub{font-size:11px;color:rgba(255,255,255,.45)}
+  .header-right{display:flex;align-items:center;gap:10px}
+  .keyword-badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:5px}
+  .kw-dot{width:6px;height:6px;border-radius:50%;background:#4cd964;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .loading-badge{font-size:11px;color:rgba(255,255,255,.4)}
+
+  .tab-bar{background:white;border-bottom:1px solid var(--gray-200);display:flex;padding:0 28px;gap:4px}
+  .tab-btn{padding:12px 20px;border:none;background:none;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:13px;color:var(--gray-400);border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}
+  .tab-btn:hover{color:var(--navy)}
+  .tab-btn.active{color:var(--navy);font-weight:500;border-bottom-color:var(--navy)}
+
+  .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 100px)}
+
+  .sidebar{background:white;border-right:1px solid var(--gray-200);padding:20px 0;position:sticky;top:100px;height:calc(100vh - 100px);overflow-y:auto}
+  .sidebar-section{padding:0 16px;margin-bottom:24px}
+  .sidebar-label{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--gray-400);margin-bottom:8px;text-transform:uppercase}
+  .filter-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 10px;border-radius:7px;border:none;background:none;cursor:pointer;font-family:'Noto Sans JP',sans-serif;font-size:12.5px;color:var(--gray-800);transition:all .15s;margin-bottom:2px;text-align:left}
+  .filter-btn:hover{background:var(--gray-50)}
+  .filter-btn.active{background:var(--navy);color:white;font-weight:500}
+  .filter-btn-left{display:flex;align-items:center;gap:7px}
+  .cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .count-badge{font-size:11px;background:var(--gray-100);color:var(--gray-600);border-radius:10px;padding:1px 7px}
+  .filter-btn.active .count-badge{background:rgba(255,255,255,.2);color:white}
+  .period-select{width:100%;padding:7px 10px;border:1px solid var(--gray-200);border-radius:7px;font-family:'Noto Sans JP',sans-serif;font-size:12px;color:var(--gray-800);background:white}
+
+  /* キーワード管理 */
+  .kw-list{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+  .kw-item{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--gray-50);border-radius:6px;font-size:12px}
+  .kw-item.inactive{opacity:.5}
+  .kw-toggle{font-size:10px;padding:2px 6px;border-radius:4px;border:none;cursor:pointer;background:var(--teal-light);color:var(--teal);font-family:'Noto Sans JP',sans-serif}
+  .kw-toggle.off{background:var(--gray-100);color:var(--gray-400)}
+  .kw-add-area{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .kw-input{width:100%;padding:6px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif}
+  .kw-cat-select{width:100%;padding:6px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px;font-family:'Noto Sans JP',sans-serif;color:var(--gray-800);background:white}
+  .kw-add-btn{width:100%;padding:7px;background:var(--navy);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif}
+  .kw-add-btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .main{padding:24px 28px}
+  .main-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .main-title{font-family:'Noto Serif JP',serif;font-size:19px;font-weight:600;color:var(--navy)}
+  .main-count{font-size:12px;color:var(--gray-400);margin-top:2px}
+
+  .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+  .stat-card{background:white;border-radius:10px;padding:12px 16px;border:1px solid var(--gray-200)}
+  .stat-label{font-size:10px;color:var(--gray-400);margin-bottom:3px}
+  .stat-value{font-family:'Noto Serif JP',serif;font-size:22px;font-weight:600;color:var(--navy);line-height:1}
+  .stat-unit{font-size:11px;font-family:'Noto Sans JP',sans-serif;font-weight:400;margin-left:2px}
+  .stat-sub{font-size:10px;color:var(--teal);margin-top:3px}
+
+  .articles{display:flex;flex-direction:column;gap:12px}
+  .article-card{background:white;border-radius:12px;border:1px solid var(--gray-200);padding:18px 20px;transition:all .2s;position:relative;overflow:hidden}
+  .article-card:hover{border-color:var(--navy);box-shadow:0 3px 14px rgba(26,39,68,.07)}
+  .article-card.high::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rose)}
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+  .card-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .new-badge{background:var(--rose);color:white;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px}
+  .cat-tag{display:inline-flex;align-items:center;gap:3px;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:500}
+  .date-text{font-size:11px;color:var(--gray-400);white-space:nowrap}
+  .stars-text{font-size:13px;white-space:nowrap}
+  .card-title{font-size:14.5px;font-weight:700;color:var(--navy);line-height:1.5;margin-bottom:8px}
+  .card-title a{color:inherit;text-decoration:none}
+  .card-title a:hover{text-decoration:underline}
+  .card-source{font-size:11px;color:var(--gray-400);margin-bottom:8px}
+  .summary-box{background:var(--gray-50);border-radius:7px;padding:10px 12px;margin-bottom:10px;border-left:2px solid var(--gray-200)}
+  .summary-label{font-size:9px;font-weight:700;color:var(--gray-400);letter-spacing:.1em;margin-bottom:5px}
+  .summary-text{font-size:12px;color:var(--gray-800);line-height:1.9}
+  .card-footer{display:flex;align-items:center;justify-content:space-between}
+  .relevance-bar{display:flex;align-items:center;gap:6px}
+  .relevance-label{font-size:10px;color:var(--gray-400)}
+  .bar-track{width:70px;height:4px;background:var(--gray-200);border-radius:2px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:2px;background:var(--teal)}
+  .relevance-pct{font-size:11px;font-weight:700;color:var(--teal)}
+  .unprocessed-note{font-size:11px;color:var(--gray-400);font-style:italic;margin-bottom:10px}
+
+  .loading{text-align:center;padding:60px;color:var(--gray-400);font-size:14px}
+  .spinner{width:32px;height:32px;border:3px solid var(--gray-200);border-top-color:var(--navy);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .empty{text-align:center;padding:60px;color:var(--gray-400)}
+  .error-box{background:#fff0f0;border:1px solid #f5c6c6;border-radius:8px;padding:16px;color:#c0392b;font-size:12px}
+
+  /* 月次レポート */
+  .report-wrap{max-width:860px;margin:0 auto}
+  .report-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .report-title{font-family:'Noto Serif JP',serif;font-size:22px;font-weight:600;color:var(--navy)}
+  .report-meta{font-size:12px;color:var(--gray-400);margin-top:4px}
+  .report-gen-btn{padding:8px 18px;background:var(--navy);color:white;border:none;border-radius:8px;font-size:13px;font-family:'Noto Sans JP',sans-serif;cursor:pointer}
+  .report-gen-btn:disabled{opacity:.5;cursor:not-allowed}
+  .report-section{background:white;border-radius:14px;border:1px solid var(--gray-200);padding:22px 24px;margin-bottom:16px}
+  .report-section-title{font-family:'Noto Serif JP',serif;font-size:16px;font-weight:600;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .section-icon{width:6px;height:20px;border-radius:3px;background:var(--rose);flex-shrink:0}
+  .trend-text{font-size:14px;line-height:1.9;color:var(--gray-800)}
+  .cat-bars{display:flex;flex-direction:column;gap:10px}
+  .cat-bar-item{display:flex;align-items:center;gap:12px}
+  .cat-bar-name{font-size:13px;color:var(--gray-800);width:160px;flex-shrink:0}
+  .cat-bar-track{flex:1;height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden}
+  .cat-bar-fill{height:100%;border-radius:4px;background:var(--rose)}
+  .cat-bar-count{font-size:12px;font-weight:700;color:var(--gray-600);width:40px;text-align:right;flex-shrink:0}
+  .topics-list{display:flex;flex-wrap:wrap;gap:8px}
+  .topic-chip{background:var(--navy-light,#253561);color:white;border-radius:20px;padding:5px 14px;font-size:12px}
+  .rec-list{display:flex;flex-direction:column;gap:12px}
+  .rec-item{border-left:3px solid var(--gray-200);padding:10px 14px;border-radius:0 8px 8px 0;background:var(--gray-50)}
+  .rec-item.high{border-left-color:var(--rose)}
+  .rec-item.mid{border-left-color:var(--gold)}
+  .rec-item.low{border-left-color:var(--teal)}
+  .rec-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .priority-badge{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:500}
+  .priority-badge.high{background:var(--rose-light);color:var(--rose)}
+  .priority-badge.mid{background:var(--gold-light);color:#8a6500}
+  .priority-badge.low{background:var(--teal-light);color:var(--teal)}
+  .rec-detail{font-size:12px;color:var(--gray-800);line-height:1.8}
+  .pickup-list{display:flex;flex-direction:column;gap:10px}
+  .pickup-item{padding:12px 14px;background:var(--gray-50);border-radius:8px;border:1px solid var(--gray-200)}
+  .pickup-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .pickup-title{font-size:13px;font-weight:700;color:var(--navy);line-height:1.5;margin-bottom:4px}
+  .pickup-title a:hover{text-decoration:underline}
+  .pickup-summary{font-size:12px;color:var(--gray-800);line-height:1.7}
+  .no-report{text-align:center;padding:60px}
+  .no-report-icon{font-size:40px;margin-bottom:12px}
+  .no-report-text{font-size:14px;color:var(--gray-400);margin-bottom:20px}
+
+  /* 使い方ガイド */
+  .guide-wrap{max-width:860px;margin:0 auto}
+  .guide-section{background:white;border-radius:14px;border:1px solid var(--gray-200);padding:22px 24px;margin-bottom:16px}
+  .guide-section-title{font-family:'Noto Serif JP',serif;font-size:16px;font-weight:600;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .guide-text{font-size:13.5px;color:var(--gray-800);line-height:2}
+  .guide-step{display:flex;gap:12px;margin-bottom:14px}
+  .guide-step-num{width:28px;height:28px;border-radius:50%;background:var(--navy);color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+  .guide-step-body{flex:1}
+  .guide-step-title{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:2px}
+  .guide-step-desc{font-size:12.5px;color:var(--gray-600);line-height:1.8}
+  .guide-card{background:var(--gray-50);border-radius:8px;padding:14px 16px;margin-bottom:8px;border:1px solid var(--gray-200)}
+  .guide-card-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+  .guide-card-desc{font-size:12.5px;color:var(--gray-600);line-height:1.8}
+  .guide-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:4px}
+  .guide-auto{background:var(--teal-light);color:var(--teal)}
+  .guide-manual{background:var(--rose-light);color:var(--rose)}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo-mark">AI</div>
+    <div>
+      <div class="header-title">AI情報ダッシュボード</div>
+      <div class="header-sub">Claude Code · エージェント工学</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="keyword-badge">
+      <span class="kw-dot"></span>
+      <span id="active-kw-label">読み込み中...</span>
+    </div>
+    <div class="loading-badge" id="last-updated"></div>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('articles',this)">📰 新着記事</button>
+  <button class="tab-btn" onclick="switchTab('report',this)">📊 月次レポート</button>
+  <button class="tab-btn" onclick="switchTab('guide',this)">📖 使い方ガイド</button>
+  <button class="tab-btn" onclick="switchTab('admin',this)">🔧 管理者マニュアル</button>
+</div>
+
+<!-- 新着記事タブ -->
+<div id="tab-articles">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">カテゴリー</div>
+        <div id="category-filters">
+          <button class="filter-btn active" onclick="filterByCategory('all',this)">
+            <span class="filter-btn-left"><span class="cat-dot" style="background:var(--navy)"></span>すべて</span>
+            <span class="count-badge">-</span>
+          </button>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">期間</div>
+        <select class="period-select" onchange="filterByPeriod(this.value)">
+          <option value="7">直近1週間</option>
+          <option value="30">直近1ヶ月</option>
+          <option value="90">直近3ヶ月</option>
+          <option value="0">すべて</option>
+        </select>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">重要度</div>
+        <button class="filter-btn" onclick="filterByStars('all-stars',this)">
+          <span class="filter-btn-left"><span style="font-size:12px">★★★</span>〜★</span>
+          <span class="count-badge" id="count-stars-all">-</span>
+        </button>
+        <button class="filter-btn" onclick="filterByStars('★★★',this)">
+          <span class="filter-btn-left"><span style="font-size:12px">★★★</span>高い</span>
+          <span class="count-badge" id="count-stars-3">-</span>
+        </button>
+        <button class="filter-btn" onclick="filterByStars('★★',this)">
+          <span class="filter-btn-left"><span style="font-size:12px">★★</span>中程度</span>
+          <span class="count-badge" id="count-stars-2">-</span>
+        </button>
+        <button class="filter-btn" onclick="filterByStars('★',this)">
+          <span class="filter-btn-left"><span style="font-size:12px">★</span>参考</span>
+          <span class="count-badge" id="count-stars-1">-</span>
+        </button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">監視キーワード</div>
+        <div style="font-size:11px;color:var(--gray-600);line-height:1.6;margin-bottom:8px">Googleニュースと海外ブログRSSから自動収集するキーワードです。「有効」のキーワードが毎朝収集されます。</div>
+        <div class="kw-list" id="kw-list"><div style="font-size:11px;color:var(--gray-400)">読み込み中...</div></div>
+        <div class="kw-add-area">
+          <div style="font-size:11px;color:var(--gray-600);line-height:1.5;margin-bottom:2px">▼ キーワードを追加</div>
+          <input class="kw-input" id="new-kw-input" placeholder="例：Claude Code、AI Agent、Prompt Engineering" type="text">
+          <select class="kw-cat-select" id="new-kw-cat">
+            <option value="" disabled selected>カテゴリーを選択</option>
+            <option value="LLM・基盤モデル">LLM・基盤モデル</option>
+            <option value="エージェント工学">エージェント工学</option>
+            <option value="プロンプトエンジニアリング">プロンプトエンジニアリング</option>
+            <option value="AI活用事例">AI活用事例</option>
+            <option value="開発ツール・IDE">開発ツール・IDE</option>
+            <option value="その他">その他</option>
+          </select>
+          <button class="kw-add-btn" id="kw-add-btn" onclick="addNewKeyword()">＋ キーワードを追加</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="main-header">
+        <div>
+          <div class="main-title">新着記事</div>
+          <div class="main-count" id="article-count">読み込み中...</div>
+        </div>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-label">総記事数</div>
+          <div class="stat-value"><span id="stat-total">-</span><span class="stat-unit">件</span></div>
+          <div class="stat-sub" id="stat-processed">AI処理済み -件</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">高重要度（★★★）</div>
+          <div class="stat-value"><span id="stat-high">-</span><span class="stat-unit">件</span></div>
+          <div class="stat-sub">要チェック</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">注目カテゴリー</div>
+          <div class="stat-value" style="font-size:15px;margin-top:4px" id="stat-top-cat">-</div>
+          <div class="stat-sub">記事数が最多</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">平均関連度スコア</div>
+          <div class="stat-value"><span id="stat-avg-score">-</span><span class="stat-unit">点</span></div>
+          <div class="stat-sub">100点満点</div>
+        </div>
+      </div>
+      <div id="articles-container">
+        <div class="loading"><div class="spinner"></div>データを読み込み中...</div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- 月次レポートタブ -->
+<div id="tab-report" style="display:none">
+  <div class="main">
+    <div class="report-wrap">
+      <div class="report-header">
+        <div>
+          <div class="report-title">月次レポート</div>
+          <div class="report-meta" id="report-meta">読み込み中...</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <select class="period-select" id="report-month-select" onchange="switchReport(this.value)" style="width:auto;min-width:140px">
+            <option value="">読み込み中...</option>
+          </select>
+          <button class="report-gen-btn" id="report-gen-btn" onclick="generateReport()">🔄 今すぐ生成</button>
+        </div>
+      </div>
+      <div id="report-container">
+        <div class="loading"><div class="spinner"></div>レポートを読み込み中...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 使い方ガイドタブ -->
+<div id="tab-guide" style="display:none">
+  <div class="main">
+    <div class="guide-wrap">
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>このダッシュボードについて</div>
+        <p class="guide-text">
+          AI技術・エージェント工学の情報収集ダッシュボードです。<br>
+          Googleニュースと海外ブログRSSから、Claude Code・LLM・AI活用などに関する記事を<strong>毎朝自動で収集</strong>し、<strong>AIが自動で分類・要約・重要度判定</strong>を行います。<br>
+          英語の記事も日本語で要約されるので、海外の一次情報を素早くキャッチアップできます。
+        </p>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>画面の見方</div>
+
+        <div class="guide-card">
+          <div class="guide-card-title">📰 新着記事タブ</div>
+          <div class="guide-card-desc">
+            収集された記事の一覧です。各記事にはAIによるサマリー（3行要約）、カテゴリー、重要度（★〜★★★）、自社関連度スコア（0〜100点）が表示されます。<br>
+            <strong>その日に取得された記事には青い「NEW」ラベル</strong>が付くので、毎朝チェックする際の目印になります。<br>
+            <strong>★★★の記事は左端にブルーのラインが付き</strong>、特に注目すべき記事です。<br>
+            記事タイトルをクリックすると元の記事ページに飛べます。
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card-title">📊 月次レポートタブ</div>
+          <div class="guide-card-desc">
+            毎月1日に自動生成される月次レポートです。先月の記事の傾向まとめ、カテゴリー別件数、注目トピック、自社への提言、注目記事ピックアップが確認できます。<br>
+            「今すぐ生成」ボタンで手動生成も可能です（1〜2分かかります）。
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card-title">🔎 左サイドバー（フィルター）</div>
+          <div class="guide-card-desc">
+            <strong>カテゴリー</strong>：記事をカテゴリーで絞り込めます。<br>
+            <strong>期間</strong>：直近1週間〜すべてで表示期間を切り替えられます。<br>
+            <strong>重要度</strong>：★★★（高い）〜★（参考）で絞り込めます。<br>
+            <strong>監視キーワード</strong>：収集対象のキーワード一覧の確認・追加・有効/無効の切り替えができます。
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>キーワードの追加・管理</div>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">キーワードを入力</div>
+            <div class="guide-step-desc">左サイドバーの「監視キーワード」欄にある入力欄に、収集したいキーワードを入力します。<br>例：「Claude Code」「AI Agent」「Prompt Engineering」など</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">カテゴリーを選択</div>
+            <div class="guide-step-desc">そのキーワードで集まる記事をどのカテゴリーに分類するか選びます。<br>（LLM・基盤モデル / エージェント工学 / プロンプトエンジニアリング / AI活用事例 / 開発ツール・IDE / その他）</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">3</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">「＋ キーワードを追加」ボタンを押す</div>
+            <div class="guide-step-desc">追加されたキーワードは翌朝9時の自動収集から反映されます。</div>
+          </div>
+        </div>
+        <p class="guide-text" style="margin-top:8px">
+          不要になったキーワードは、キーワード横の「有効」ボタンを押すと「無効」に切り替わり、次回から収集対象外になります。再度「無効」を押せば「有効」に戻せます。
+        </p>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>自動で動いていること</div>
+        <p class="guide-text" style="margin-bottom:12px">以下はすべて自動実行されるため、普段の操作は不要です。</p>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎朝 9:00 ── 記事の自動収集</div>
+          <div class="guide-card-desc">有効なキーワードでGoogleニュース（日本語＋英語）と海外ブログRSSを検索し、新着記事をデータベースに追加します。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎晩 23:00 ── AI分析の送信</div>
+          <div class="guide-card-desc">未処理の記事をAI（Claude）に送信し、要約・重要度・関連度の分析を依頼します。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎朝 6:00 ── AI分析結果の反映</div>
+          <div class="guide-card-desc">AIの分析結果をデータベースに書き戻します。朝ダッシュボードを開けば最新の分析付き記事が見られます。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎月1日 7:00 ── 月次レポート生成</div>
+          <div class="guide-card-desc">先月分の記事を集計し、AIが傾向まとめ・提言・注目記事をレポートにまとめます。</div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>よくある質問</div>
+        <div class="guide-card">
+          <div class="guide-card-title">Q. 記事が表示されないのですが？</div>
+          <div class="guide-card-desc">左サイドバーの「期間」フィルターを「すべて」に切り替えてみてください。デフォルトは「直近1週間」のため、古い記事は非表示になっています。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">Q.「AI処理待ち」と表示される記事があります</div>
+          <div class="guide-card-desc">AIの分析は毎晩23時に送信→翌朝6時に結果反映されます。当日収集された記事は翌朝までお待ちください。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">Q. キーワードを追加したのに記事が増えません</div>
+          <div class="guide-card-desc">キーワード追加後、翌朝9時の自動収集で反映されます。追加直後には収集されませんのでお待ちください。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">Q. 月次レポートが表示されません</div>
+          <div class="guide-card-desc">「月次レポート」タブの「今すぐ生成」ボタンで手動生成できます。初回はまだレポートが存在しないため、一度生成してください。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 管理者マニュアルタブ -->
+<div id="tab-admin" style="display:none">
+  <div class="main">
+    <div class="guide-wrap">
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>管理者マニュアルについて</div>
+        <p class="guide-text">
+          GASエディタでの手動操作が必要な場面のための手順書です。<br>
+          普段は自動で動いているので、基本的には何もしなくてOKです。<br>
+          <strong>GASエディタの開き方</strong>：スプレッドシート → 拡張機能 → Apps Script
+        </p>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>記事を全部消してイチから取り直したい</div>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">記事DBを空にする</div>
+            <div class="guide-step-desc">スプレッドシートの「記事DB」シートを開き、2行目以降を全選択して削除する。<br>（1行目のヘッダーは残すこと）</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">fetchAndStoreArticles を実行</div>
+            <div class="guide-step-desc">GASエディタで関数を選んで ▶ 実行。Googleニュースから記事が収集される。すぐ終わります。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">3</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">sendBatchToClaude を実行</div>
+            <div class="guide-step-desc">未処理の記事をAIに送信する。こちらもすぐ終わります。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">4</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">3〜5分待ってから retrieveBatchResults を実行</div>
+            <div class="guide-step-desc">AIの分析結果を書き戻す。「まだ処理中」と出たら、もう少し待ってからもう一度実行してください。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>「解析エラー」の記事を再処理したい</div>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">処理済みフラグを消す</div>
+            <div class="guide-step-desc">スプレッドシートの「記事DB」シートで、該当記事のK列（処理済みフラグ）の「済」を削除して空白にする。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">sendBatchToClaude → 3〜5分後に retrieveBatchResults</div>
+            <div class="guide-step-desc">上と同じ手順でAI分析を再実行する。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>月次レポートを作り直したい</div>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">古いレポートを削除</div>
+            <div class="guide-step-desc">スプレッドシートの「月次レポート」シートで、作り直したい月の行を右クリック →「行を削除」。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">レポートを再生成</div>
+            <div class="guide-step-desc">ダッシュボードの「月次レポート」タブ →「今すぐ生成」ボタンを押す。1〜2分かかります。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>自動実行が止まってしまったら</div>
+        <p class="guide-text" style="margin-bottom:12px">
+          トリガー（自動実行の設定）が消えたり動かなくなった場合：
+        </p>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">トリガーの状態を確認</div>
+            <div class="guide-step-desc">GASエディタの左メニューの「トリガー」（時計アイコン）で一覧を確認する。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">setAllTriggers を実行</div>
+            <div class="guide-step-desc">トリガーがなければ、GASエディタで <code>setAllTriggers</code> を実行。以下の4つが再設定される。</div>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="guide-card">
+            <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎朝 6:00 ── retrieveBatchResults</div>
+            <div class="guide-card-desc">前夜に送ったAI分析の結果を書き戻す</div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎朝 9:00 ── fetchAndStoreArticles</div>
+            <div class="guide-card-desc">Googleニュース（日英）と海外ブログRSSから新着記事を収集</div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎晩 23:00 ── sendBatchToClaude</div>
+            <div class="guide-card-desc">その日の未処理記事をAIに送信</div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎月1日 7:00 ── generateMonthlyReport</div>
+            <div class="guide-card-desc">先月分の月次レポートを生成</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>コードを修正した後の反映手順</div>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">GASエディタで「デプロイを管理」をクリック</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">編集（鉛筆アイコン）をクリック</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">3</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">バージョンを「新バージョン」に変更</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">4</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">「デプロイ」をクリック</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>関数一覧</div>
+        <p class="guide-text" style="margin-bottom:12px">GASエディタで手動実行できる関数の一覧です。</p>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>fetchAndStoreArticles</div>
+          <div class="guide-card-desc">Googleニュース（日英）と海外ブログRSSから記事を収集して記事DBに追加する</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>sendBatchToClaude</div>
+          <div class="guide-card-desc">未処理の記事をClaude AIに送信する</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>retrieveBatchResults</div>
+          <div class="guide-card-desc">AIの分析結果を受け取って記事DBに書き戻す</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>generateMonthlyReport</div>
+          <div class="guide-card-desc">先月分（なければ今月分）の月次レポートを生成する</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>setAllTriggers</div>
+          <div class="guide-card-desc">自動実行のトリガーをすべて再設定する（初回 or リセット時のみ）</div>
+        </div>
+        <div class="guide-card" style="opacity:0.6">
+          <div class="guide-card-title">doGet / getArticlesData / getKeywordsData / addKeyword / toggleKeyword / getMonthlyReportData</div>
+          <div class="guide-card-desc">ダッシュボードが自動で呼ぶ関数。手動で実行する必要はありません。</div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>トラブルシューティング</div>
+        <div class="guide-card">
+          <div class="guide-card-title">記事が収集されない</div>
+          <div class="guide-card-desc">GASエディタの「実行数」（時計アイコン）で fetchAndStoreArticles のログを確認。<br>「キーワード管理」シートに有効なキーワードがあるかも確認してください。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">AIサマリーが入らない・解析エラーになる</div>
+          <div class="guide-card-desc">GASエディタ →「プロジェクトの設定」→「スクリプトプロパティ」で ANTHROPIC_API_KEY が正しいか確認。<br>Anthropicコンソールでキーが有効か・残高があるか確認してください。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">ダッシュボードが表示されない</div>
+          <div class="guide-card-desc">「デプロイを管理」で最新バージョンにデプロイされているか確認してください。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+var allArticles   = [];
+var keywords      = [];
+var currentCat    = 'all';
+var currentPeriod = 7;
+var currentStars  = 'all-stars';
+
+var CAT_COLORS = {
+  'LLM・基盤モデル':            {bg:'#eff6ff',text:'#2563eb',dot:'#3b82f6'},
+  'エージェント工学':            {bg:'#ecfdf5',text:'#059669',dot:'#10b981'},
+  'プロンプトエンジニアリング':    {bg:'#f5f3ff',text:'#7c3aed',dot:'#8b5cf6'},
+  'AI活用事例':                 {bg:'#fefce8',text:'#ca8a04',dot:'#f59e0b'},
+  '開発ツール・IDE':            {bg:'#fef2f2',text:'#dc2626',dot:'#ef4444'},
+  'その他':                     {bg:'#f0efe9',text:'#6b6960',dot:'#a09e93'},
+};
+function getCatColor(cat){return CAT_COLORS[cat]||{bg:'#f0efe9',text:'#6b6960',dot:'#a09e93'}}
+
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
+  if(btn)btn.classList.add('active');
+  document.getElementById('tab-articles').style.display=tab==='articles'?'':'none';
+  document.getElementById('tab-report').style.display=tab==='report'?'':'none';
+  document.getElementById('tab-guide').style.display=tab==='guide'?'':'none';
+  document.getElementById('tab-admin').style.display=tab==='admin'?'':'none';
+  if(tab==='report')loadReport();
+}
+
+function loadData(){
+  google.script.run
+    .withSuccessHandler(function(data){
+      allArticles=data||[];
+      updateStats();buildCategoryFilters();renderArticles();
+      document.getElementById('last-updated').textContent='最終更新 '+fmtDate(new Date().toISOString());
+    })
+    .withFailureHandler(function(err){
+      document.getElementById('articles-container').innerHTML=
+        '<div class="error-box">記事データ取得失敗：'+(err.message||JSON.stringify(err))+'</div>';
+    })
+    .getArticlesData();
+
+  google.script.run
+    .withSuccessHandler(function(data){
+      keywords=data||[];renderKeywords();updateActiveKwLabel();
+    })
+    .withFailureHandler(function(){
+      document.getElementById('kw-list').innerHTML='<div style="font-size:11px;color:#c0392b">取得失敗</div>';
+    })
+    .getKeywordsData();
+}
+
+function reloadKeywords(){
+  google.script.run
+    .withSuccessHandler(function(data){keywords=data||[];renderKeywords();updateActiveKwLabel();})
+    .getKeywordsData();
+}
+
+function updateActiveKwLabel(){
+  var active=keywords.filter(function(k){return k.status==='有効';});
+  document.getElementById('active-kw-label').textContent=
+    active.length>0?active.map(function(k){return k.keyword;}).join(' / '):'（なし）';
+}
+
+function buildCategoryFilters(){
+  var cats={};
+  allArticles.forEach(function(a){if(a.category)cats[a.category]=(cats[a.category]||0)+1;});
+  var html='<button class="filter-btn active" onclick="filterByCategory(\'all\',this)">'+
+    '<span class="filter-btn-left"><span class="cat-dot" style="background:var(--navy)"></span>すべて</span>'+
+    '<span class="count-badge">'+allArticles.length+'</span></button>';
+  Object.keys(cats).sort().forEach(function(cat){
+    var c=getCatColor(cat);
+    html+='<button class="filter-btn" onclick="filterByCategory(\''+escQ(cat)+'\',this)">'+
+      '<span class="filter-btn-left"><span class="cat-dot" style="background:'+c.dot+'"></span>'+esc(cat)+'</span>'+
+      '<span class="count-badge">'+cats[cat]+'</span></button>';
+  });
+  document.getElementById('category-filters').innerHTML=html;
+}
+
+function updateStats(){
+  var processed=allArticles.filter(function(a){return a.processed==='済';});
+  var catCount={};
+  allArticles.forEach(function(a){catCount[a.category]=(catCount[a.category]||0)+1;});
+  var topCat=Object.keys(catCount).sort(function(a,b){return catCount[b]-catCount[a];})[0]||'-';
+  var scores=processed.filter(function(a){return Number(a.score)>0;}).map(function(a){return Number(a.score);});
+  var avg=scores.length?Math.round(scores.reduce(function(s,v){return s+v;},0)/scores.length):'-';
+
+  document.getElementById('stat-total').textContent=allArticles.length;
+  document.getElementById('stat-processed').textContent='AI処理済み '+processed.length+'件';
+  document.getElementById('stat-high').textContent=processed.filter(function(a){return a.stars==='★★★';}).length;
+  document.getElementById('stat-top-cat').textContent=topCat;
+  document.getElementById('stat-avg-score').textContent=avg;
+  document.getElementById('count-stars-all').textContent=processed.length;
+  document.getElementById('count-stars-3').textContent=processed.filter(function(a){return a.stars==='★★★';}).length;
+  document.getElementById('count-stars-2').textContent=processed.filter(function(a){return a.stars==='★★';}).length;
+  document.getElementById('count-stars-1').textContent=processed.filter(function(a){return a.stars==='★';}).length;
+}
+
+function renderArticles(){
+  var now=new Date();
+  var filtered=allArticles.filter(function(a){
+    if(currentCat!=='all'&&a.category!==currentCat)return false;
+    if(currentStars!=='all-stars'&&a.stars!==currentStars)return false;
+    if(currentPeriod>0){
+      var d=new Date(a.fetchedAt||a.pubDate);
+      if(isNaN(d)||(now-d)/(1000*60*60*24)>currentPeriod)return false;
+    }
+    return true;
+  });
+
+  document.getElementById('article-count').textContent=
+    filtered.length+'件'+(currentPeriod>0?'（直近'+currentPeriod+'日）':'');
+
+  if(filtered.length===0){
+    document.getElementById('articles-container').innerHTML='<div class="empty">該当する記事がありません。</div>';
+    return;
+  }
+
+  var html='<div class="articles">';
+  filtered.forEach(function(a){
+    var todayStr=now.getFullYear()+'/'+('0'+(now.getMonth()+1)).slice(-2)+'/'+('0'+now.getDate()).slice(-2);
+    var isNew=a.fetchedAt&&a.fetchedAt.slice(0,10)===todayStr;
+    var c=getCatColor(a.category);
+    var score=Number(a.score)||0;
+    var summaryHtml='';
+    if(a.processed==='済'&&a.summary){
+      var parts=a.summary.split(/(?=[①②③])/).filter(function(s){return s.trim();});
+      summaryHtml='<div class="summary-box"><div class="summary-label">AI サマリー</div><div class="summary-text">';
+      parts.slice(0,3).forEach(function(p){summaryHtml+=esc(p.trim())+'<br>';});
+      summaryHtml+='</div></div>';
+    }else if(a.processed!=='済'){
+      summaryHtml='<p class="unprocessed-note">※ AI処理待ち（夜間バッチ後に表示されます）</p>';
+    }
+    html+='<div class="article-card'+(a.stars==='★★★'?' high':'')+'">'+
+      '<div class="card-top"><div class="card-meta">'+
+      (isNew?'<span class="new-badge">NEW</span>':'')+
+      '<span class="cat-tag" style="background:'+c.bg+';color:'+c.text+'">● '+esc(a.category)+'</span>'+
+      '<span class="date-text">'+esc(fmtDate(a.pubDate))+'</span>'+
+      '</div><div class="stars-text">'+esc(a.stars||'')+'</div></div>'+
+      '<div class="card-title">'+(a.url?'<a href="'+esc(a.url)+'" target="_blank">'+esc(a.title)+'</a>':esc(a.title))+'</div>'+
+      (a.source?'<div class="card-source">出典：'+esc(a.source)+'</div>':'')+
+      summaryHtml+
+      '<div class="card-footer">'+
+      (score>0?'<div class="relevance-bar"><span class="relevance-label">自社関連度</span><div class="bar-track"><div class="bar-fill" style="width:'+score+'%"></div></div><span class="relevance-pct">'+score+'%</span></div>':'<div></div>')+
+      '</div></div>';
+  });
+  html+='</div>';
+  document.getElementById('articles-container').innerHTML=html;
+}
+
+function renderKeywords(){
+  if(!keywords||keywords.length===0){
+    document.getElementById('kw-list').innerHTML='<div style="font-size:11px;color:var(--gray-400)">キーワードがありません</div>';
+    return;
+  }
+  var html='';
+  keywords.forEach(function(kw,i){
+    var isActive=kw.status==='有効';
+    html+='<div class="kw-item'+(isActive?'':' inactive')+'">'+
+      '<span style="font-size:12px">'+esc(kw.keyword)+'</span>'+
+      '<button class="kw-toggle'+(isActive?'':' off')+'" onclick="toggleKw('+(i+2)+',\''+(isActive?'無効':'有効')+'\')">'+
+      (isActive?'有効':'無効')+'</button></div>';
+  });
+  document.getElementById('kw-list').innerHTML=html;
+}
+
+function addNewKeyword(){
+  var input=document.getElementById('new-kw-input');
+  var kw=input.value.trim();
+  var catSelect=document.getElementById('new-kw-cat');
+  var cat=catSelect.value;
+  if(!kw){alert('キーワードを入力してください。');return;}
+  if(!cat){alert('カテゴリーを選択してください。');return;}
+  var btn=document.getElementById('kw-add-btn');
+  btn.textContent='追加中...';btn.disabled=true;
+  google.script.run
+    .withSuccessHandler(function(){input.value='';catSelect.selectedIndex=0;btn.textContent='＋ キーワードを追加';btn.disabled=false;reloadKeywords();})
+    .withFailureHandler(function(err){btn.textContent='＋ キーワードを追加';btn.disabled=false;alert('追加失敗：'+(err.message||''));})
+    .addKeyword(kw,cat);
+}
+
+function toggleKw(rowIndex,newStatus){
+  google.script.run
+    .withSuccessHandler(function(){reloadKeywords();})
+    .withFailureHandler(function(err){alert('切替失敗：'+(err.message||''));})
+    .toggleKeyword(rowIndex,newStatus);
+}
+
+function filterByCategory(cat,btn){
+  currentCat=cat;
+  document.querySelectorAll('#category-filters .filter-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  renderArticles();
+}
+function filterByPeriod(val){currentPeriod=parseInt(val);renderArticles();}
+function filterByStars(stars,btn){
+  currentStars=stars;
+  document.querySelectorAll('.sidebar-section .filter-btn[onclick*="filterByStars"]').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  renderArticles();
+}
+
+var allReports=[];
+
+function loadReport(){
+  document.getElementById('report-container').innerHTML='<div class="loading"><div class="spinner"></div>レポートを読み込み中...</div>';
+  google.script.run
+    .withSuccessHandler(function(data){
+      if(!data||!data.exists||!data.reports||data.reports.length===0){
+        allReports=[];
+        document.getElementById('report-meta').textContent='レポートはまだ生成されていません';
+        document.getElementById('report-month-select').innerHTML='<option value="">レポートなし</option>';
+        document.getElementById('report-container').innerHTML=
+          '<div class="no-report"><div class="no-report-icon">📋</div>'+
+          '<div class="no-report-text">「今すぐ生成」ボタンを押すと、現在の記事データからレポートを作成します。</div></div>';
+        return;
+      }
+      allReports=data.reports;
+      var select=document.getElementById('report-month-select');
+      var html='';
+      for(var i=allReports.length-1;i>=0;i--){
+        html+='<option value="'+i+'">'+esc(fmtMonth(allReports[i].targetMonth))+'</option>';
+      }
+      select.innerHTML=html;
+      showReport(allReports.length-1);
+    })
+    .withFailureHandler(function(err){
+      document.getElementById('report-container').innerHTML='<div class="error-box">取得失敗：'+(err.message||'')+'</div>';
+    })
+    .getMonthlyReportData();
+}
+
+function switchReport(idx){
+  idx=parseInt(idx);
+  if(isNaN(idx)||!allReports[idx])return;
+  showReport(idx);
+}
+
+function showReport(idx){
+  var r=allReports[idx];
+  document.getElementById('report-meta').textContent=fmtMonth(r.targetMonth)+' · 生成日時：'+fmtDate(r.createdAt);
+  renderReport(r.report);
+}
+
+function generateReport(){
+  var btn=document.getElementById('report-gen-btn');
+  btn.textContent='⏳ 生成中...';btn.disabled=true;
+  google.script.run
+    .withSuccessHandler(function(){btn.textContent='🔄 今すぐ生成';btn.disabled=false;loadReport();})
+    .withFailureHandler(function(err){btn.textContent='🔄 今すぐ生成';btn.disabled=false;alert('生成失敗：'+(err.message||''));})
+    .generateMonthlyReport();
+}
+
+function renderReport(r){
+  if(!r)return;
+  var maxCat=Math.max.apply(null,(r.categoryBreakdown||[]).map(function(c){return c.count;}));
+  var catBars=(r.categoryBreakdown||[]).map(function(c){
+    var pct=maxCat>0?Math.round(c.count/maxCat*100):0;
+    return '<div class="cat-bar-item"><span class="cat-bar-name">'+esc(c.name)+'</span>'+
+      '<div class="cat-bar-track"><div class="cat-bar-fill" style="width:'+pct+'%"></div></div>'+
+      '<span class="cat-bar-count">'+c.count+'件</span></div>';
+  }).join('');
+
+  var topics=(r.keyTopics||[]).map(function(t){return '<span class="topic-chip">'+esc(t)+'</span>';}).join('');
+
+  var recs=(r.recommendations||[]).map(function(rec){
+    var cls=rec.priority==='高'?'high':rec.priority==='中'?'mid':'low';
+    return '<div class="rec-item '+cls+'"><div class="rec-title">'+esc(rec.title)+
+      '<span class="priority-badge '+cls+'">'+esc(rec.priority)+'</span></div>'+
+      '<div class="rec-detail">'+esc(rec.detail)+'</div></div>';
+  }).join('');
+
+  var pickups=(r.pickupArticles||[]).map(function(a){
+    var c=getCatColor(a.category);
+    return '<div class="pickup-item"><div class="pickup-top">'+
+      '<span class="cat-tag" style="background:'+c.bg+';color:'+c.text+'">● '+esc(a.category)+'</span>'+
+      '<span style="font-size:11px;color:var(--gray-400)">関連度 '+a.score+'%</span></div>'+
+      '<div class="pickup-title">'+(a.url?'<a href="'+esc(a.url)+'" target="_blank" style="color:inherit;text-decoration:none">'+esc(a.title)+'</a>':esc(a.title))+'</div>'+
+      '<div class="pickup-summary">'+esc(a.summary)+'</div></div>';
+  }).join('');
+
+  document.getElementById('report-container').innerHTML=
+    '<div class="report-section"><div class="report-section-title"><span class="section-icon"></span>今月の傾向まとめ</div>'+
+    '<p class="trend-text">'+esc(r.trendSummary||'')+'</p></div>'+
+    '<div class="report-section"><div class="report-section-title"><span class="section-icon"></span>カテゴリー別件数</div>'+
+    '<div class="cat-bars">'+catBars+'</div></div>'+
+    '<div class="report-section"><div class="report-section-title"><span class="section-icon"></span>注目トピック</div>'+
+    '<div class="topics-list">'+topics+'</div></div>'+
+    '<div class="report-section"><div class="report-section-title"><span class="section-icon"></span>自社への提言</div>'+
+    '<div class="rec-list">'+recs+'</div></div>'+
+    '<div class="report-section"><div class="report-section-title"><span class="section-icon"></span>注目記事ピックアップ</div>'+
+    '<div class="pickup-list">'+pickups+'</div></div>';
+}
+
+function esc(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escQ(str){return String(str||'').replace(/'/g,"\\'");}
+function fmtMonth(str){
+  if(!str)return '';
+  if(/^\d{4}年\d{1,2}月$/.test(str))return str;
+  var d=new Date(str);
+  if(isNaN(d))return String(str);
+  return d.getFullYear()+'年'+(d.getMonth()+1)+'月';
+}
+function fmtDate(str){
+  if(!str)return '';
+  var d=new Date(str);
+  if(isNaN(d))return String(str);
+  var y=d.getFullYear(),m=d.getMonth()+1,day=d.getDate();
+  var h=('0'+d.getHours()).slice(-2),min=('0'+d.getMinutes()).slice(-2);
+  if(/\d{1,2}:\d{2}/.test(str))return y+'年'+m+'月'+day+'日 '+h+':'+min;
+  return y+'年'+m+'月'+day+'日';
+}
+
+loadData();
+</script>
+</body>
+</html>

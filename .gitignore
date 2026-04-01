@@ -1,0 +1,14 @@
+# clasp認証情報
+.clasprc.json
+
+# 環境変数
+.env
+.env.*
+
+# Node.js
+node_modules/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
