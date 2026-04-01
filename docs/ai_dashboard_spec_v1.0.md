@@ -1,7 +1,7 @@
 # AI情報ダッシュボード システム仕様書 v1.0
 
 作成日：2026年3月24日
-最終更新：2026年3月24日（processArticles対応）
+最終更新：2026年4月2日（AI推進係対応・カテゴリー拡張）
 管理者：林部
 Googleアカウント：sakamoto.chie@gmail.com
 
@@ -9,11 +9,11 @@ Googleアカウント：sakamoto.chie@gmail.com
 
 ## 1. プロジェクト概要
 
-Claude Code・エージェント工学を中心としたAI技術の情報収集を自動化・可視化するWebダッシュボード。Googleニュース（日本語＋英語）と海外ブログRSSから記事を自動収集し、Claude AIが分類・要約（日本語）・重要度スコアを付与。ブラウザで閲覧できるダッシュボードに表示する。
+各種AIツール（ChatGPT・Gemini・Claude・Perplexity・GitHub Copilot等）の最新情報を自動収集・可視化するWebダッシュボード。Googleニュース（日本語＋英語）と海外ブログRSSから記事を自動収集し、Claude AIが分類・要約（日本語）・重要度スコアを付与。ブラウザで閲覧できるダッシュボードに表示する。
 
 ### 背景
 
-ワクハピダッシュボード（女性活躍推進）の仕組みを応用し、AI情報収集に特化したダッシュボードとして新規構築。海外の一次情報を日本語要約で効率的にキャッチアップすることが目的。
+ワクハピダッシュボード（女性活躍推進）の仕組みを応用し、AI情報収集に特化したダッシュボードとして新規構築。当初はClaude Code・エージェント工学特化だったが、2026年4月にAI推進係に任命されたことを受け、社内で利用されている各種AIツールを網羅的にカバーする方針に拡張。
 
 ### システムの特徴
 
@@ -76,7 +76,7 @@ GAS Web App（doGet）→ ブラウザでダッシュボード表示
 
 | 列 | 項目名 | 内容 |
 |----|--------|------|
-| A | カテゴリー | LLM・基盤モデル / エージェント工学 / プロンプトエンジニアリング / AI活用事例 / 開発ツール・IDE / その他 |
+| A | カテゴリー | LLM・基盤モデル / エージェント工学 / AIコーディング支援 / AI運用・自動化 / AI検索・リサーチ / AI活用事例 / AIガバナンス・セキュリティ / プロンプトエンジニアリング / 開発ツール・IDE / その他 |
 | B | 記事タイトル | RSSから取得したタイトル（英語記事は英語のまま） |
 | C | URL | 記事のURL |
 | D | 出典 | 媒体名（Anthropic Blog, Simon Willison 等） |
@@ -98,8 +98,8 @@ GAS Web App（doGet）→ ブラウザでダッシュボード表示
 | D | 追加日 | キーワードを追加した日付 |
 | E | 備考 | メモ |
 
-**初期キーワード：**
-Claude Code / AI Agent / LLM / Prompt Engineering / Claude Anthropic
+**キーワード（2026年4月2日時点・22件）：**
+Claude Code / AI Agent / LLM / Prompt Engineering / Claude Anthropic / ChatGPT / OpenAI / Gemini Google AI / Perplexity AI / Genspark AI / GitHub Copilot / Cursor AI / AI code generation / MCP protocol AI / AI coding assistant / AIOps / AI automation workflow / AI monitoring / 生成AI 業務活用 / 生成AI セキュリティ / AI ガバナンス 企業 / RAG retrieval augmented
 
 ### シート③：月次レポート
 
@@ -282,9 +282,13 @@ var RSS_FEEDS = [
 |------------|--------|------------|----------|
 | LLM・基盤モデル | #eff6ff | #2563eb | #3b82f6 |
 | エージェント工学 | #ecfdf5 | #059669 | #10b981 |
-| プロンプトエンジニアリング | #f5f3ff | #7c3aed | #8b5cf6 |
+| AIコーディング支援 | #fef2f2 | #dc2626 | #ef4444 |
+| AI運用・自動化 | #fff7ed | #c2410c | #f97316 |
+| AI検索・リサーチ | #e0f2fe | #0369a1 | #0ea5e9 |
 | AI活用事例 | #fefce8 | #ca8a04 | #f59e0b |
-| 開発ツール・IDE | #fef2f2 | #dc2626 | #ef4444 |
+| AIガバナンス・セキュリティ | #fdf2f8 | #be185d | #ec4899 |
+| プロンプトエンジニアリング | #f5f3ff | #7c3aed | #8b5cf6 |
+| 開発ツール・IDE | #f1f5f9 | #475569 | #64748b |
 | その他 | #f0efe9 | #6b6960 | #a09e93 |
 
 ### 画面構成
