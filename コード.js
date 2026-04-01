@@ -611,57 +611,6 @@ function getArticleCount() {
 }
 
 // ============================================================
-// キーワード一括追加（初回のみ実行）
-// ============================================================
-function addNewKeywords() {
-  var newKeywords = [
-    // 社内で使われているAIツール系
-    ["ChatGPT", "LLM・基盤モデル"],
-    ["OpenAI", "LLM・基盤モデル"],
-    ["Gemini Google AI", "LLM・基盤モデル"],
-    ["Perplexity AI", "AI検索・リサーチ"],
-    ["Genspark AI", "AI検索・リサーチ"],
-    // 開発チーム向け
-    ["GitHub Copilot", "AIコーディング支援"],
-    ["Cursor AI", "AIコーディング支援"],
-    ["AI code generation", "AIコーディング支援"],
-    ["MCP protocol AI", "エージェント工学"],
-    ["AI coding assistant", "AIコーディング支援"],
-    // 運用チーム向け
-    ["AIOps", "AI運用・自動化"],
-    ["AI automation workflow", "AI運用・自動化"],
-    ["AI monitoring", "AI運用・自動化"],
-    // 全社・ビジネス向け
-    ["生成AI 業務活用", "AI活用事例"],
-    ["生成AI セキュリティ", "AIガバナンス・セキュリティ"],
-    ["AI ガバナンス 企業", "AIガバナンス・セキュリティ"],
-    ["RAG retrieval augmented", "LLM・基盤モデル"],
-  ];
-
-  var ss      = SpreadsheetApp.openById(SPREADSHEET_ID);
-  var kwSheet = ss.getSheetByName(SHEET_KW);
-
-  // 既存キーワードを取得（重複防止）
-  var existing = kwSheet.getDataRange().getValues()
-    .map(function(row) { return String(row[0]).toLowerCase(); });
-
-  var addedCount = 0;
-  var today = getNow().slice(0, 10);
-
-  newKeywords.forEach(function(kw) {
-    if (existing.indexOf(kw[0].toLowerCase()) !== -1) {
-      Logger.log("スキップ（既存）: " + kw[0]);
-      return;
-    }
-    kwSheet.appendRow([kw[0], kw[1], "有効", today, ""]);
-    addedCount++;
-    Logger.log("追加: " + kw[0] + " → " + kw[1]);
-  });
-
-  Logger.log("完了。新規追加: " + addedCount + "件");
-}
-
-// ============================================================
 // トリガー設定（初回のみ実行）
 // ============================================================
 function setAllTriggers() {
