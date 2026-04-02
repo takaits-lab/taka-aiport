@@ -563,10 +563,37 @@ function generateMonthlyReport() {
 // ============================================================
 // ダッシュボード用データ取得
 // ============================================================
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile("dashboard")
-    .setTitle("AI情報ダッシュボード")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+// ダッシュボード用 JSON API
+// ============================================================
+
+// JSON APIエンドポイント（読み取り系）
+function doGet(e) {
+  var action = e.parameter.action || '';
+  var result;
+  switch(action) {
+    case 'getArticles':      result = getArticlesData(); break;
+    case 'getKeywords':      result = getKeywordsData(); break;
+    case 'getMonthlyReport': result = getMonthlyReportData(); break;
+    case 'getArticleCount':  result = { count: getArticleCount() }; break;
+    default: result = { error: 'Unknown action' };
+  }
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// JSON APIエンドポイント（書き込み系）
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var action = data.action || '';
+  var result;
+  switch(action) {
+    case 'addKeyword':      result = addKeyword(data.keyword, data.category); break;
+    case 'toggleKeyword':   result = toggleKeyword(data.rowIndex, data.newStatus); break;
+    case 'generateReport':  generateMonthlyReport(); result = { success: true }; break;
+    default: result = { error: 'Unknown action' };
+  }
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function getArticlesData() {

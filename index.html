@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI情報ダッシュボード</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <button class="menu-btn" onclick="toggleSidebar()" aria-label="メニューを開く">☰</button>
+    <div class="logo-mark">AI</div>
+    <div>
+      <div class="header-title">AI情報ダッシュボード</div>
+      <div class="header-sub">AI技術の総合情報収集</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="loading-badge" id="last-updated"></div>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('articles',this)">📰 新着記事</button>
+  <button class="tab-btn" onclick="switchTab('report',this)">📊 月次レポート</button>
+  <button class="tab-btn" onclick="switchTab('guide',this)">📖 使い方ガイド</button>
+  <button class="tab-btn" onclick="switchTab('admin',this)">🔧 管理者マニュアル</button>
+</div>
+
+<!-- 新着記事タブ -->
+<div id="tab-articles">
+  <div class="layout">
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-close" onclick="closeSidebar()" aria-label="メニューを閉じる">✕</button>
+      <div class="sidebar-section">
+        <div class="sidebar-label">カテゴリー</div>
+        <div id="category-filters">
+          <button class="filter-btn active" onclick="filterByCategory('all',this)">
+            <span class="filter-btn-left"><span class="cat-dot" style="background:var(--navy)"></span>すべて</span>
+            <span class="count-badge">-</span>
+          </button>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">期間</div>
+        <select class="period-select" onchange="filterByPeriod(this.value)">
+          <option value="7">直近1週間</option>
+          <option value="30" selected>直近1ヶ月</option>
+          <option value="90">直近3ヶ月</option>
+          <option value="0">すべて（古い記事含む）</option>
+        </select>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">重要度</div>
+        <button class="filter-btn" onclick="filterByStars('all-stars',this)">
+          <span class="filter-btn-left"><span style="font-size:12px">★★★</span>〜★</span>
+          <span class="count-badge" id="count-stars-all">-</span>
+        </button>
+        <button class="filter-btn" onclick="filterByStars('★★★',this)">
+          <span class="filter-btn-left"><span style="font-size:12px">★★★</span>高い</span>
+          <span class="count-badge" id="count-stars-3">-</span>
+        </button>
+        <button class="filter-btn" onclick="filterByStars('★★',this)">
+          <span class="filter-btn-left"><span style="font-size:12px">★★</span>中程度</span>
+          <span class="count-badge" id="count-stars-2">-</span>
+        </button>
+        <button class="filter-btn" onclick="filterByStars('★',this)">
+          <span class="filter-btn-left"><span style="font-size:12px">★</span>参考</span>
+          <span class="count-badge" id="count-stars-1">-</span>
+        </button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">監視キーワード</div>
+        <div style="font-size:11px;color:var(--gray-600);line-height:1.6;margin-bottom:8px">Googleニュースと海外ブログRSSから自動収集するキーワードです。「有効」のキーワードが毎朝収集されます。</div>
+        <div class="kw-list" id="kw-list"><div style="font-size:11px;color:var(--gray-400)">読み込み中...</div></div>
+        <div class="kw-add-area">
+          <div style="font-size:11px;color:var(--gray-600);line-height:1.5;margin-bottom:2px">▼ キーワードを追加</div>
+          <input class="kw-input" id="new-kw-input" placeholder="例：Claude Code、AI Agent、Prompt Engineering" type="text">
+          <select class="kw-cat-select" id="new-kw-cat">
+            <option value="" disabled selected>カテゴリーを選択</option>
+            <option value="LLM・基盤モデル">LLM・基盤モデル</option>
+            <option value="エージェント工学">エージェント工学</option>
+            <option value="AIコーディング支援">AIコーディング支援</option>
+            <option value="AI運用・自動化">AI運用・自動化</option>
+            <option value="AI検索・リサーチ">AI検索・リサーチ</option>
+            <option value="AI活用事例">AI活用事例</option>
+            <option value="AIガバナンス・セキュリティ">AIガバナンス・セキュリティ</option>
+            <option value="プロンプトエンジニアリング">プロンプトエンジニアリング</option>
+            <option value="その他">その他</option>
+          </select>
+          <button class="kw-add-btn" id="kw-add-btn" onclick="addNewKeyword()">＋ キーワードを追加</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="main-header">
+        <div>
+          <div class="main-title">新着記事</div>
+          <div class="main-count" id="article-count">読み込み中...</div>
+        </div>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-label">総記事数</div>
+          <div class="stat-value"><span id="stat-total">-</span><span class="stat-unit">件</span></div>
+          <div class="stat-sub" id="stat-processed">AI処理済み -件</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">高重要度（★★★）</div>
+          <div class="stat-value"><span id="stat-high">-</span><span class="stat-unit">件</span></div>
+          <div class="stat-sub">要チェック</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">注目カテゴリー</div>
+          <div class="stat-value" style="font-size:15px;margin-top:4px" id="stat-top-cat">-</div>
+          <div class="stat-sub">記事数が最多</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">平均関連度スコア</div>
+          <div class="stat-value"><span id="stat-avg-score">-</span><span class="stat-unit">点</span></div>
+          <div class="stat-sub">100点満点</div>
+        </div>
+      </div>
+      <div id="articles-container">
+        <div class="loading"><div class="spinner"></div>データを読み込み中...</div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- 月次レポートタブ -->
+<div id="tab-report" style="display:none">
+  <div class="main">
+    <div class="report-wrap">
+      <div class="report-header">
+        <div>
+          <div class="report-title">月次レポート</div>
+          <div class="report-meta" id="report-meta">読み込み中...</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <select class="period-select" id="report-month-select" onchange="switchReport(this.value)" style="width:auto;min-width:140px">
+            <option value="">読み込み中...</option>
+          </select>
+          <button class="report-gen-btn" id="report-gen-btn" onclick="generateReport()">🔄 今すぐ生成</button>
+        </div>
+      </div>
+      <div id="report-container">
+        <div class="loading"><div class="spinner"></div>レポートを読み込み中...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 使い方ガイドタブ -->
+<div id="tab-guide" style="display:none">
+  <div class="main">
+    <div class="guide-wrap">
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>このダッシュボードについて</div>
+        <p class="guide-text">
+          AI技術の総合情報収集ダッシュボードです。<br>
+          Googleニュースと海外ブログRSSから、ChatGPT・Gemini・Claude・Perplexity・GitHub Copilotなど各種AIツールの最新情報を<strong>毎朝自動で収集</strong>し、<strong>AIが自動で分類・要約・重要度判定</strong>を行います。<br>
+          英語の記事も日本語で要約されるので、海外の一次情報を素早くキャッチアップできます。
+        </p>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>画面の見方</div>
+
+        <div class="guide-card">
+          <div class="guide-card-title">📰 新着記事タブ</div>
+          <div class="guide-card-desc">
+            収集された記事の一覧です。各記事にはAIによるサマリー（3行要約）、カテゴリー、重要度（★〜★★★）、自社関連度スコア（0〜100点）が表示されます。<br>
+            <strong>その日に取得された記事には青い「NEW」ラベル</strong>が付くので、毎朝チェックする際の目印になります。<br>
+            <strong>★★★の記事は左端にブルーのラインが付き</strong>、特に注目すべき記事です。<br>
+            記事タイトルをクリックすると元の記事ページに飛べます。
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card-title">📊 月次レポートタブ</div>
+          <div class="guide-card-desc">
+            毎月1日に自動生成される月次レポートです。先月の記事の傾向まとめ、カテゴリー別件数、注目トピック、自社への提言、注目記事ピックアップが確認できます。<br>
+            「今すぐ生成」ボタンで手動生成も可能です（1〜2分かかります）。
+          </div>
+        </div>
+
+        <div class="guide-card">
+          <div class="guide-card-title">🔎 左サイドバー（フィルター）</div>
+          <div class="guide-card-desc">
+            <strong>カテゴリー</strong>：記事をカテゴリーで絞り込めます。<br>
+            <strong>期間</strong>：直近1週間〜すべてで表示期間を切り替えられます。<br>
+            <strong>重要度</strong>：★★★（高い）〜★（参考）で絞り込めます。<br>
+            <strong>監視キーワード</strong>：収集対象のキーワード一覧の確認・追加・有効/無効の切り替えができます。
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>キーワードの追加・管理</div>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">キーワードを入力</div>
+            <div class="guide-step-desc">左サイドバーの「監視キーワード」欄にある入力欄に、収集したいキーワードを入力します。<br>例：「Claude Code」「AI Agent」「Prompt Engineering」など</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">カテゴリーを選択</div>
+            <div class="guide-step-desc">そのキーワードで集まる記事をどのカテゴリーに分類するか選びます。<br>（LLM・基盤モデル / エージェント工学 / AIコーディング支援 / AI運用・自動化 / AI検索・リサーチ / AI活用事例 / AIガバナンス・セキュリティ / プロンプトエンジニアリング / その他）</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">3</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">「＋ キーワードを追加」ボタンを押す</div>
+            <div class="guide-step-desc">追加されたキーワードは翌朝9時の自動収集から反映されます。</div>
+          </div>
+        </div>
+        <p class="guide-text" style="margin-top:8px">
+          不要になったキーワードは、キーワード横の「有効」ボタンを押すと「無効」に切り替わり、次回から収集対象外になります。再度「無効」を押せば「有効」に戻せます。
+        </p>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>自動で動いていること</div>
+        <p class="guide-text" style="margin-bottom:12px">以下はすべて自動実行されるため、普段の操作は不要です。</p>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎朝 9:00 ── 記事の自動収集</div>
+          <div class="guide-card-desc">有効なキーワードでGoogleニュース（日本語＋英語）と海外ブログRSSを検索し、新着記事をデータベースに追加します。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎晩 23:00 ── AI分析・要約</div>
+          <div class="guide-card-desc">未処理の記事をAI（Claude）で分析し、要約・重要度・関連度を自動で書き込みます。翌朝にはダッシュボードに反映されています。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎月1日 7:00 ── 月次レポート生成</div>
+          <div class="guide-card-desc">先月分の記事を集計し、AIが傾向まとめ・提言・注目記事をレポートにまとめます。</div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>よくある質問</div>
+        <div class="guide-card">
+          <div class="guide-card-title">Q. 記事が表示されないのですが？</div>
+          <div class="guide-card-desc">左サイドバーの「期間」フィルターを「すべて」に切り替えてみてください。デフォルトは「直近1週間」のため、古い記事は非表示になっています。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">Q.「AI処理待ち」と表示される記事があります</div>
+          <div class="guide-card-desc">AIの分析は毎晩23時に自動実行されます。当日収集された記事は翌朝までお待ちください。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">Q. キーワードを追加したのに記事が増えません</div>
+          <div class="guide-card-desc">キーワード追加後、翌朝9時の自動収集で反映されます。追加直後には収集されませんのでお待ちください。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">Q. 月次レポートが表示されません</div>
+          <div class="guide-card-desc">「月次レポート」タブの「今すぐ生成」ボタンで手動生成できます。初回はまだレポートが存在しないため、一度生成してください。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 管理者マニュアルタブ -->
+<div id="tab-admin" style="display:none">
+  <div class="main">
+    <div class="guide-wrap">
+
+      <!-- GAS WebアプリURL設定セクション -->
+      <div class="gas-url-section">
+        <div class="guide-section-title"><span class="section-icon" style="background:var(--rose)"></span>GAS WebアプリURL設定（必須）</div>
+        <p class="guide-text" style="margin-bottom:12px">
+          このダッシュボードのデータ取得先となるGAS WebアプリのURLを設定してください。<br>
+          GASエディタの「デプロイ」→「デプロイを管理」から確認できるウェブアプリURLを入力してください。
+        </p>
+        <input class="gas-url-input" id="gas-url-input" placeholder="https://script.google.com/macros/s/xxx/exec" type="url">
+        <button class="gas-url-save-btn" onclick="saveGasUrl()">URLを保存</button>
+        <div class="gas-url-status" id="gas-url-status"></div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>管理者マニュアルについて</div>
+        <p class="guide-text">
+          GASエディタでの手動操作が必要な場面のための手順書です。<br>
+          普段は自動で動いているので、基本的には何もしなくてOKです。<br>
+          <strong>GASエディタの開き方</strong>：スプレッドシート → 拡張機能 → Apps Script
+        </p>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>記事を全部消してイチから取り直したい</div>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">記事DBを空にする</div>
+            <div class="guide-step-desc">スプレッドシートの「記事DB」シートを開き、2行目以降を全選択して削除する。<br>（1行目のヘッダーは残すこと）</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">fetchAndStoreArticles を実行</div>
+            <div class="guide-step-desc">GASエディタで関数を選んで ▶ 実行。Googleニュースから記事が収集される。すぐ終わります。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">3</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">processArticles を実行</div>
+            <div class="guide-step-desc">未処理の記事をAIで分析・要約する。件数が多い場合は自動で継続実行されるので、1回実行すればOKです。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>「解析エラー」の記事を再処理したい</div>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">処理済みフラグを消す</div>
+            <div class="guide-step-desc">スプレッドシートの「記事DB」シートで、該当記事のK列（処理済みフラグ）の「済」を削除して空白にする。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">processArticles を実行</div>
+            <div class="guide-step-desc">上と同じ手順でAI分析を再実行する。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>月次レポートを作り直したい</div>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">古いレポートを削除</div>
+            <div class="guide-step-desc">スプレッドシートの「月次レポート」シートで、作り直したい月の行を右クリック →「行を削除」。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">レポートを再生成</div>
+            <div class="guide-step-desc">ダッシュボードの「月次レポート」タブ →「今すぐ生成」ボタンを押す。1〜2分かかります。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>自動実行が止まってしまったら</div>
+        <p class="guide-text" style="margin-bottom:12px">
+          トリガー（自動実行の設定）が消えたり動かなくなった場合：
+        </p>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">トリガーの状態を確認</div>
+            <div class="guide-step-desc">GASエディタの左メニューの「トリガー」（時計アイコン）で一覧を確認する。</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">GAS管理画面でトリガーを手動設定</div>
+            <div class="guide-step-desc">左メニューの時計アイコン（トリガー）→「トリガーを追加」で、以下の3つを設定してください。</div>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="guide-card">
+            <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎朝 9:00 ── fetchAndStoreArticles</div>
+            <div class="guide-card-desc">Googleニュース（日英）と海外ブログRSSから新着記事を収集（日付ベースのタイマー / 午前9時〜10時）</div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎晩 23:00 ── processArticles</div>
+            <div class="guide-card-desc">その日の未処理記事をAIで分析・要約（日付ベースのタイマー / 午後11時〜12時）</div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎月1日 7:00 ── generateMonthlyReport</div>
+            <div class="guide-card-desc">先月分の月次レポートを生成（月ベースのタイマー / 1日 / 午前7時〜8時）</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>コードを修正した後の反映手順</div>
+        <div class="guide-step">
+          <div class="guide-step-num">1</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">GASエディタで「デプロイを管理」をクリック</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">2</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">編集（鉛筆アイコン）をクリック</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">3</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">バージョンを「新バージョン」に変更</div>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-step-num">4</div>
+          <div class="guide-step-body">
+            <div class="guide-step-title">「デプロイ」をクリック</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>関数一覧</div>
+        <p class="guide-text" style="margin-bottom:12px">GASエディタで手動実行できる関数の一覧です。</p>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>fetchAndStoreArticles</div>
+          <div class="guide-card-desc">Googleニュース（日英）と海外ブログRSSから記事を収集して記事DBに追加する</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>processArticles</div>
+          <div class="guide-card-desc">未処理の記事をClaude AIで分析・要約する（件数が多い場合は自動継続）</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>generateMonthlyReport</div>
+          <div class="guide-card-desc">先月分（なければ今月分）の月次レポートを生成する</div>
+        </div>
+        <div class="guide-card" style="opacity:0.6">
+          <div class="guide-card-title">setAllTriggers（非推奨）</div>
+          <div class="guide-card-desc">トリガーの一括設定。現在はGAS管理画面での手動設定を推奨しています。</div>
+        </div>
+        <div class="guide-card" style="opacity:0.6">
+          <div class="guide-card-title">doGet / getArticlesData / getKeywordsData / addKeyword / toggleKeyword / getMonthlyReportData</div>
+          <div class="guide-card-desc">ダッシュボードが自動で呼ぶ関数。手動で実行する必要はありません。</div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title"><span class="section-icon"></span>トラブルシューティング</div>
+        <div class="guide-card">
+          <div class="guide-card-title">記事が収集されない</div>
+          <div class="guide-card-desc">GASエディタの「実行数」（時計アイコン）で fetchAndStoreArticles のログを確認。<br>「キーワード管理」シートに有効なキーワードがあるかも確認してください。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">AIサマリーが入らない・解析エラーになる</div>
+          <div class="guide-card-desc">GASエディタ →「プロジェクトの設定」→「スクリプトプロパティ」で ANTHROPIC_API_KEY が正しいか確認。<br>Anthropicコンソールでキーが有効か・残高があるか確認してください。</div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">ダッシュボードが表示されない</div>
+          <div class="guide-card-desc">「デプロイを管理」で最新バージョンにデプロイされているか確認してください。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
