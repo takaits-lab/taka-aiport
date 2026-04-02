@@ -2,7 +2,7 @@
 /* GitHub Pages版：google.script.run → fetch() でGAS APIを呼び出す */
 
 // GAS WebアプリのURL（設定画面で変更可能、localStorageに保存）
-var GAS_API_URL = localStorage.getItem('ai-dashboard-gas-url') || '';
+var GAS_API_URL = 'https://script.google.com/macros/s/AKfycbw72XuXfkLQe9HkRci3e5jq2MQqfKT0RK5O8zor3KOQetLdz5y_bGtQV7UpITEKNX2v/exec';
 
 // GAS APIを呼び出す共通関数（GETリクエスト）
 function gasGet(action) {
