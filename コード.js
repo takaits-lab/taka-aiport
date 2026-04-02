@@ -517,19 +517,19 @@ function generateMonthlyReport() {
     "【高重要度記事トップ10】",
     highList,
     "",
-    "以下のJSON形式で月次レポートを生成してください。JSON以外は一切出力しないこと。",
+    "以下のJSON形式で月次レポートを生成してください。JSON1行のみ出力すること。```json等のマークダウン記法・改行・説明文は一切付けないこと。",
     '{"targetMonth":"' + targetMonthStr + '","totalCount":記事総数,"categoryBreakdown":[{"name":"カテゴリー名","count":件数}],"trendSummary":"今月の傾向3〜4文","keyTopics":["トピック1","トピック2","トピック3"],"recommendations":[{"title":"提言タイトル","detail":"具体的アクション2〜3文","priority":"高/中/低"}],"pickupArticles":[{"title":"記事タイトル","category":"カテゴリー","summary":"サマリー","score":スコア}]}',
     "【条件】",
     "- categoryBreakdown には記事DBに存在する全カテゴリーを必ず含めること（件数が少なくても省略しない）",
-    "- recommendations はAI活用・業務効率化に向けた具体的な提言を3〜5件",
-    "- pickupArticles は高重要度記事から特に重要な3〜5件",
+    "- recommendations はAI活用・業務効率化に向けた具体的な提言を3件（detailは各1〜2文に収めること）",
+    "- pickupArticles は高重要度記事から特に重要な3件（summaryは各1文に収めること）",
     "- 株式会社タカインフォテクノ（約200名・ICT/SES企業）がAIを業務に活用する視点で記述すること"
   ].join("\n");
 
   var response = UrlFetchApp.fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-    payload: JSON.stringify({ model: MODEL, max_tokens: 2000, messages: [{ role: "user", content: prompt }] }),
+    payload: JSON.stringify({ model: MODEL, max_tokens: 4000, messages: [{ role: "user", content: prompt }] }),
     muteHttpExceptions: true
   });
 

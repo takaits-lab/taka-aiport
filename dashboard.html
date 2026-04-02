@@ -167,79 +167,77 @@
   .sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:200}
   .sidebar-close{display:none;position:absolute;top:12px;right:12px;background:none;border:none;font-size:22px;color:var(--gray-600);cursor:pointer;padding:4px 8px;line-height:1}
 
-  /* ===== スマホ対応 ===== */
-  @media(max-width:768px){
-    /* ハンバーガーボタン表示 */
-    .menu-btn{display:block}
-    .sidebar-close{display:block}
+  /* ===== スマホ対応（JSクラス .mobile で適用） ===== */
+  /* ハンバーガーボタン表示 */
+  .mobile .menu-btn{display:block}
+  .mobile .sidebar-close{display:block}
 
-    /* ヘッダー */
-    .header{padding:0 12px;height:52px}
-    .header-title{font-size:14px}
-    .header-sub{display:none}
-    .keyword-badge{display:none}
-    .loading-badge{font-size:10px}
+  /* ヘッダー */
+  .mobile .header{padding:0 12px;height:52px}
+  .mobile .header-title{font-size:14px}
+  .mobile .header-sub{display:none}
+  .mobile .keyword-badge{display:none}
+  .mobile .loading-badge{font-size:10px}
 
-    /* タブバー */
-    .tab-bar{padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;gap:0}
-    .tab-bar::-webkit-scrollbar{display:none}
-    .tab-btn{padding:10px 14px;font-size:12px;flex-shrink:0}
+  /* タブバー */
+  .mobile .tab-bar{padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;gap:0}
+  .mobile .tab-bar::-webkit-scrollbar{display:none}
+  .mobile .tab-btn{padding:10px 14px;font-size:12px;flex-shrink:0}
 
-    /* レイアウト：サイドバーを非表示にして1カラム */
-    .layout{grid-template-columns:1fr}
-    .sidebar{display:none}
+  /* レイアウト：サイドバーを非表示にして1カラム */
+  .mobile .layout{grid-template-columns:1fr}
+  .mobile .sidebar{display:none}
 
-    /* サイドバー：オーバーレイモード */
-    .sidebar.open{display:block;position:fixed;top:0;left:0;width:280px;height:100vh;z-index:201;padding-top:52px;box-shadow:4px 0 20px rgba(0,0,0,.15)}
-    .sidebar-overlay.open{display:block}
+  /* サイドバー：オーバーレイモード */
+  .mobile .sidebar.open{display:block;position:fixed;top:0;left:0;width:280px;height:100vh;z-index:201;padding-top:52px;box-shadow:4px 0 20px rgba(0,0,0,.15);overflow-y:auto}
+  .mobile .sidebar-overlay.open{display:block}
 
-    /* メインエリア */
-    .main{padding:16px 12px}
-    .main-title{font-size:16px}
+  /* メインエリア */
+  .mobile .main{padding:16px 12px}
+  .mobile .main-title{font-size:16px}
 
-    /* 統計カード */
-    .stats-bar{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
-    .stat-card{padding:10px 12px}
-    .stat-value{font-size:18px}
-    .stat-label{font-size:9px}
+  /* 統計カード */
+  .mobile .stats-bar{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+  .mobile .stat-card{padding:10px 12px}
+  .mobile .stat-value{font-size:18px}
+  .mobile .stat-label{font-size:9px}
 
-    /* 記事カード */
-    .article-card{padding:14px 14px;border-radius:10px}
-    .card-title{font-size:13.5px}
-    .card-source{font-size:10px}
-    .summary-box{padding:8px 10px}
-    .summary-text{font-size:11.5px}
-    .cat-tag{font-size:10px;padding:2px 6px}
-    .date-text{font-size:10px}
-    .stars-text{font-size:12px}
-    .relevance-label{font-size:9px}
-    .bar-track{width:50px}
-    .relevance-pct{font-size:10px}
+  /* 記事カード */
+  .mobile .article-card{padding:14px 14px;border-radius:10px}
+  .mobile .card-title{font-size:13.5px}
+  .mobile .card-source{font-size:10px}
+  .mobile .summary-box{padding:8px 10px}
+  .mobile .summary-text{font-size:11.5px}
+  .mobile .cat-tag{font-size:10px;padding:2px 6px}
+  .mobile .date-text{font-size:10px}
+  .mobile .stars-text{font-size:12px}
+  .mobile .relevance-label{font-size:9px}
+  .mobile .bar-track{width:50px}
+  .mobile .relevance-pct{font-size:10px}
 
-    /* レポート */
-    .report-wrap{max-width:100%}
-    .report-header{flex-wrap:wrap;gap:12px}
-    .report-title{font-size:18px}
-    .report-section{padding:16px 14px;border-radius:10px}
-    .report-section-title{font-size:14px}
-    .trend-text{font-size:13px}
-    .cat-bar-name{width:100px;font-size:12px}
-    .cat-bar-count{font-size:11px}
-    .rec-title{font-size:12px}
-    .rec-detail{font-size:11px}
-    .pickup-item{padding:10px 12px}
-    .pickup-title{font-size:12px}
-    .pickup-summary{font-size:11px}
+  /* レポート */
+  .mobile .report-wrap{max-width:100%}
+  .mobile .report-header{flex-wrap:wrap;gap:12px}
+  .mobile .report-title{font-size:18px}
+  .mobile .report-section{padding:16px 14px;border-radius:10px}
+  .mobile .report-section-title{font-size:14px}
+  .mobile .trend-text{font-size:13px}
+  .mobile .cat-bar-name{width:100px;font-size:12px}
+  .mobile .cat-bar-count{font-size:11px}
+  .mobile .rec-title{font-size:12px}
+  .mobile .rec-detail{font-size:11px}
+  .mobile .pickup-item{padding:10px 12px}
+  .mobile .pickup-title{font-size:12px}
+  .mobile .pickup-summary{font-size:11px}
 
-    /* ガイド */
-    .guide-wrap{max-width:100%}
-    .guide-section{padding:16px 14px;border-radius:10px}
-    .guide-section-title{font-size:14px}
-    .guide-text{font-size:12.5px}
-    .guide-step-desc{font-size:11.5px}
-    .guide-card{padding:12px 12px}
-    .guide-card-desc{font-size:11.5px}
-  }
+  /* ガイド */
+  .mobile .guide-wrap{max-width:100%}
+  .mobile .guide-section{padding:16px 14px;border-radius:10px}
+  .mobile .guide-section-title{font-size:14px}
+  .mobile .guide-text{font-size:12.5px}
+  .mobile .guide-step-desc{font-size:11.5px}
+  .mobile .guide-card{padding:12px 12px}
+  .mobile .guide-card-desc{font-size:11.5px}
 </style>
 </head>
 <body>
@@ -1007,6 +1005,16 @@ function fmtDate(str){
   if(/\d{1,2}:\d{2}/.test(str))return y+'年'+m+'月'+day+'日 '+h+':'+min;
   return y+'年'+m+'月'+day+'日';
 }
+
+// スマホ判定（GASのiframe内ではメディアクエリが効かないためJSで判定）
+function checkMobile(){
+  var isMobile = window.innerWidth <= 768 || screen.width <= 768 ||
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile) document.body.classList.add('mobile');
+  else document.body.classList.remove('mobile');
+}
+checkMobile();
+window.addEventListener('resize', checkMobile);
 
 // サイドバー開閉
 function toggleSidebar(){
