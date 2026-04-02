@@ -250,7 +250,11 @@ function processArticles() {
   var dbSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_DB);
   var unprocessedRows = getUnprocessedRows(dbSheet);
 
-  if (unprocessedRows.length === 0) { Logger.log("未処理の記事はありません。"); return; }
+  if (unprocessedRows.length === 0) {
+    Logger.log("未処理の記事はありません。");
+    cleanupContinueTrigger();
+    return;
+  }
   Logger.log("未処理記事数: " + unprocessedRows.length + "件 — 処理開始");
 
   var systemPrompt = buildSystemPrompt();
@@ -262,7 +266,10 @@ function processArticles() {
   for (var i = 0; i < unprocessedRows.length; i++) {
     if (new Date().getTime() - startTime > TIME_LIMIT) {
       Logger.log("時間制限に到達。処理済み: " + successCount + "件, エラー: " + errorCount + "件, 残り: " + (unprocessedRows.length - i) + "件");
-      ScriptApp.newTrigger("processArticles").timeBased().after(10 * 1000).create();
+      // 既存の自動継続トリガーがあれば先に削除（孤児トリガー防止）
+      cleanupContinueTrigger();
+      var continueTrigger = ScriptApp.newTrigger("processArticles").timeBased().after(10 * 1000).create();
+      PropertiesService.getScriptProperties().setProperty("CONTINUE_TRIGGER_ID", continueTrigger.getUniqueId());
       Logger.log("10秒後に自動継続トリガーを設定しました。");
       return;
     }
@@ -299,10 +306,8 @@ function processArticles() {
     }
   }
 
-  // 自動継続トリガーがあれば削除
-  ScriptApp.getProjectTriggers().forEach(function(t) {
-    if (t.getHandlerFunction() === "processArticles") ScriptApp.deleteTrigger(t);
-  });
+  // 自動継続トリガーのみ削除（定期実行トリガーは残す）
+  cleanupContinueTrigger();
   Logger.log("全件処理完了。成功: " + successCount + "件, エラー: " + errorCount + "件");
 }
 
@@ -345,6 +350,17 @@ function retrieveBatchResults() {
 
   PropertiesService.getScriptProperties().deleteProperty("BATCH_ID");
   Logger.log("結果書き戻し完了。成功件数: " + successCount + "件");
+}
+
+// 自動継続トリガーのみ削除（定期実行トリガーは残す）
+function cleanupContinueTrigger() {
+  var continueTriggerId = PropertiesService.getScriptProperties().getProperty("CONTINUE_TRIGGER_ID");
+  if (continueTriggerId) {
+    ScriptApp.getProjectTriggers().forEach(function(t) {
+      if (t.getUniqueId() === continueTriggerId) ScriptApp.deleteTrigger(t);
+    });
+    PropertiesService.getScriptProperties().deleteProperty("CONTINUE_TRIGGER_ID");
+  }
 }
 
 function buildSystemPrompt() {
