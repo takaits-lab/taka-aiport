@@ -160,12 +160,93 @@
   .guide-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:4px}
   .guide-auto{background:var(--teal-light);color:var(--teal)}
   .guide-manual{background:var(--rose-light);color:var(--rose)}
+
+  /* ハンバーガーメニューボタン */
+  .menu-btn{display:none;background:none;border:none;color:white;font-size:22px;cursor:pointer;padding:4px 8px;margin-right:8px;line-height:1}
+  /* サイドバーオーバーレイ */
+  .sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:200}
+  .sidebar-close{display:none;position:absolute;top:12px;right:12px;background:none;border:none;font-size:22px;color:var(--gray-600);cursor:pointer;padding:4px 8px;line-height:1}
+
+  /* ===== スマホ対応 ===== */
+  @media(max-width:768px){
+    /* ハンバーガーボタン表示 */
+    .menu-btn{display:block}
+    .sidebar-close{display:block}
+
+    /* ヘッダー */
+    .header{padding:0 12px;height:52px}
+    .header-title{font-size:14px}
+    .header-sub{display:none}
+    .keyword-badge{display:none}
+    .loading-badge{font-size:10px}
+
+    /* タブバー */
+    .tab-bar{padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;gap:0}
+    .tab-bar::-webkit-scrollbar{display:none}
+    .tab-btn{padding:10px 14px;font-size:12px;flex-shrink:0}
+
+    /* レイアウト：サイドバーを非表示にして1カラム */
+    .layout{grid-template-columns:1fr}
+    .sidebar{display:none}
+
+    /* サイドバー：オーバーレイモード */
+    .sidebar.open{display:block;position:fixed;top:0;left:0;width:280px;height:100vh;z-index:201;padding-top:52px;box-shadow:4px 0 20px rgba(0,0,0,.15)}
+    .sidebar-overlay.open{display:block}
+
+    /* メインエリア */
+    .main{padding:16px 12px}
+    .main-title{font-size:16px}
+
+    /* 統計カード */
+    .stats-bar{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+    .stat-card{padding:10px 12px}
+    .stat-value{font-size:18px}
+    .stat-label{font-size:9px}
+
+    /* 記事カード */
+    .article-card{padding:14px 14px;border-radius:10px}
+    .card-title{font-size:13.5px}
+    .card-source{font-size:10px}
+    .summary-box{padding:8px 10px}
+    .summary-text{font-size:11.5px}
+    .cat-tag{font-size:10px;padding:2px 6px}
+    .date-text{font-size:10px}
+    .stars-text{font-size:12px}
+    .relevance-label{font-size:9px}
+    .bar-track{width:50px}
+    .relevance-pct{font-size:10px}
+
+    /* レポート */
+    .report-wrap{max-width:100%}
+    .report-header{flex-wrap:wrap;gap:12px}
+    .report-title{font-size:18px}
+    .report-section{padding:16px 14px;border-radius:10px}
+    .report-section-title{font-size:14px}
+    .trend-text{font-size:13px}
+    .cat-bar-name{width:100px;font-size:12px}
+    .cat-bar-count{font-size:11px}
+    .rec-title{font-size:12px}
+    .rec-detail{font-size:11px}
+    .pickup-item{padding:10px 12px}
+    .pickup-title{font-size:12px}
+    .pickup-summary{font-size:11px}
+
+    /* ガイド */
+    .guide-wrap{max-width:100%}
+    .guide-section{padding:16px 14px;border-radius:10px}
+    .guide-section-title{font-size:14px}
+    .guide-text{font-size:12.5px}
+    .guide-step-desc{font-size:11.5px}
+    .guide-card{padding:12px 12px}
+    .guide-card-desc{font-size:11.5px}
+  }
 </style>
 </head>
 <body>
 
 <header class="header">
   <div class="header-left">
+    <button class="menu-btn" onclick="toggleSidebar()" aria-label="メニューを開く">☰</button>
     <div class="logo-mark">AI</div>
     <div>
       <div class="header-title">AI情報ダッシュボード</div>
@@ -191,7 +272,9 @@
 <!-- 新着記事タブ -->
 <div id="tab-articles">
   <div class="layout">
-    <aside class="sidebar">
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-close" onclick="closeSidebar()" aria-label="メニューを閉じる">✕</button>
       <div class="sidebar-section">
         <div class="sidebar-label">カテゴリー</div>
         <div id="category-filters">
@@ -394,12 +477,8 @@
           <div class="guide-card-desc">有効なキーワードでGoogleニュース（日本語＋英語）と海外ブログRSSを検索し、新着記事をデータベースに追加します。</div>
         </div>
         <div class="guide-card">
-          <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎晩 23:00 ── AI分析の送信</div>
-          <div class="guide-card-desc">未処理の記事をAI（Claude）に送信し、要約・重要度・関連度の分析を依頼します。</div>
-        </div>
-        <div class="guide-card">
-          <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎朝 6:00 ── AI分析結果の反映</div>
-          <div class="guide-card-desc">AIの分析結果をデータベースに書き戻します。朝ダッシュボードを開けば最新の分析付き記事が見られます。</div>
+          <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎晩 23:00 ── AI分析・要約</div>
+          <div class="guide-card-desc">未処理の記事をAI（Claude）で分析し、要約・重要度・関連度を自動で書き込みます。翌朝にはダッシュボードに反映されています。</div>
         </div>
         <div class="guide-card">
           <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎月1日 7:00 ── 月次レポート生成</div>
@@ -415,7 +494,7 @@
         </div>
         <div class="guide-card">
           <div class="guide-card-title">Q.「AI処理待ち」と表示される記事があります</div>
-          <div class="guide-card-desc">AIの分析は毎晩23時に送信→翌朝6時に結果反映されます。当日収集された記事は翌朝までお待ちください。</div>
+          <div class="guide-card-desc">AIの分析は毎晩23時に自動実行されます。当日収集された記事は翌朝までお待ちください。</div>
         </div>
         <div class="guide-card">
           <div class="guide-card-title">Q. キーワードを追加したのに記事が増えません</div>
@@ -464,15 +543,8 @@
         <div class="guide-step">
           <div class="guide-step-num">3</div>
           <div class="guide-step-body">
-            <div class="guide-step-title">sendBatchToClaude を実行</div>
-            <div class="guide-step-desc">未処理の記事をAIに送信する。こちらもすぐ終わります。</div>
-          </div>
-        </div>
-        <div class="guide-step">
-          <div class="guide-step-num">4</div>
-          <div class="guide-step-body">
-            <div class="guide-step-title">3〜5分待ってから retrieveBatchResults を実行</div>
-            <div class="guide-step-desc">AIの分析結果を書き戻す。「まだ処理中」と出たら、もう少し待ってからもう一度実行してください。</div>
+            <div class="guide-step-title">processArticles を実行</div>
+            <div class="guide-step-desc">未処理の記事をAIで分析・要約する。件数が多い場合は自動で継続実行されるので、1回実行すればOKです。</div>
           </div>
         </div>
       </div>
@@ -489,7 +561,7 @@
         <div class="guide-step">
           <div class="guide-step-num">2</div>
           <div class="guide-step-body">
-            <div class="guide-step-title">sendBatchToClaude → 3〜5分後に retrieveBatchResults</div>
+            <div class="guide-step-title">processArticles を実行</div>
             <div class="guide-step-desc">上と同じ手順でAI分析を再実行する。</div>
           </div>
         </div>
@@ -528,26 +600,22 @@
         <div class="guide-step">
           <div class="guide-step-num">2</div>
           <div class="guide-step-body">
-            <div class="guide-step-title">setAllTriggers を実行</div>
-            <div class="guide-step-desc">トリガーがなければ、GASエディタで <code>setAllTriggers</code> を実行。以下の4つが再設定される。</div>
+            <div class="guide-step-title">GAS管理画面でトリガーを手動設定</div>
+            <div class="guide-step-desc">左メニューの時計アイコン（トリガー）→「トリガーを追加」で、以下の3つを設定してください。</div>
           </div>
         </div>
         <div style="margin-top:12px">
           <div class="guide-card">
-            <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎朝 6:00 ── retrieveBatchResults</div>
-            <div class="guide-card-desc">前夜に送ったAI分析の結果を書き戻す</div>
-          </div>
-          <div class="guide-card">
             <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎朝 9:00 ── fetchAndStoreArticles</div>
-            <div class="guide-card-desc">Googleニュース（日英）と海外ブログRSSから新着記事を収集</div>
+            <div class="guide-card-desc">Googleニュース（日英）と海外ブログRSSから新着記事を収集（日付ベースのタイマー / 午前9時〜10時）</div>
           </div>
           <div class="guide-card">
-            <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎晩 23:00 ── sendBatchToClaude</div>
-            <div class="guide-card-desc">その日の未処理記事をAIに送信</div>
+            <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎晩 23:00 ── processArticles</div>
+            <div class="guide-card-desc">その日の未処理記事をAIで分析・要約（日付ベースのタイマー / 午後11時〜12時）</div>
           </div>
           <div class="guide-card">
             <div class="guide-card-title"><span class="guide-badge guide-auto">自動</span>毎月1日 7:00 ── generateMonthlyReport</div>
-            <div class="guide-card-desc">先月分の月次レポートを生成</div>
+            <div class="guide-card-desc">先月分の月次レポートを生成（月ベースのタイマー / 1日 / 午前7時〜8時）</div>
           </div>
         </div>
       </div>
@@ -588,20 +656,16 @@
           <div class="guide-card-desc">Googleニュース（日英）と海外ブログRSSから記事を収集して記事DBに追加する</div>
         </div>
         <div class="guide-card">
-          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>sendBatchToClaude</div>
-          <div class="guide-card-desc">未処理の記事をClaude AIに送信する</div>
-        </div>
-        <div class="guide-card">
-          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>retrieveBatchResults</div>
-          <div class="guide-card-desc">AIの分析結果を受け取って記事DBに書き戻す</div>
+          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>processArticles</div>
+          <div class="guide-card-desc">未処理の記事をClaude AIで分析・要約する（件数が多い場合は自動継続）</div>
         </div>
         <div class="guide-card">
           <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>generateMonthlyReport</div>
           <div class="guide-card-desc">先月分（なければ今月分）の月次レポートを生成する</div>
         </div>
-        <div class="guide-card">
-          <div class="guide-card-title"><span class="guide-badge guide-manual">手動OK</span>setAllTriggers</div>
-          <div class="guide-card-desc">自動実行のトリガーをすべて再設定する（初回 or リセット時のみ）</div>
+        <div class="guide-card" style="opacity:0.6">
+          <div class="guide-card-title">setAllTriggers（非推奨）</div>
+          <div class="guide-card-desc">トリガーの一括設定。現在はGAS管理画面での手動設定を推奨しています。</div>
         </div>
         <div class="guide-card" style="opacity:0.6">
           <div class="guide-card-title">doGet / getArticlesData / getKeywordsData / addKeyword / toggleKeyword / getMonthlyReportData</div>
@@ -942,6 +1006,18 @@ function fmtDate(str){
   var h=('0'+d.getHours()).slice(-2),min=('0'+d.getMinutes()).slice(-2);
   if(/\d{1,2}:\d{2}/.test(str))return y+'年'+m+'月'+day+'日 '+h+':'+min;
   return y+'年'+m+'月'+day+'日';
+}
+
+// サイドバー開閉
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+  document.body.style.overflow=document.getElementById('sidebar').classList.contains('open')?'hidden':'';
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  document.body.style.overflow='';
 }
 
 loadData();
