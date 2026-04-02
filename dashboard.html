@@ -814,6 +814,12 @@ function renderArticles(){
     }
     return true;
   });
+  // 公開日の新しい順にソート
+  filtered.sort(function(a,b){
+    var da=new Date(a.pubDate),db=new Date(b.pubDate);
+    if(isNaN(da))return 1; if(isNaN(db))return -1;
+    return db-da;
+  });
 
   document.getElementById('article-count').textContent=
     filtered.length+'件'+(currentPeriod>0?'（直近'+currentPeriod+'日）':'');
