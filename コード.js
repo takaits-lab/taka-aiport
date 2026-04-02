@@ -475,11 +475,12 @@ function generateMonthlyReport() {
   var data     = dbSheet.getRange(2, 1, lastRow - 1, 11).getValues();
   var articles = [];
 
+  // 公開日（pubDate）基準で月を判定
   data.forEach(function(row) {
     if (!row[1] || row[10] !== "済") return;
-    var fetchedAt = new Date(row[5]);
-    if (isNaN(fetchedAt)) return;
-    if (fetchedAt.getFullYear() === lastMonth.getFullYear() && fetchedAt.getMonth() === lastMonth.getMonth()) {
+    var pubDate = new Date(row[4]);
+    if (isNaN(pubDate)) return;
+    if (pubDate.getFullYear() === lastMonth.getFullYear() && pubDate.getMonth() === lastMonth.getMonth()) {
       articles.push({ category: String(row[0]||""), title: String(row[1]||""), url: String(row[2]||""), source: String(row[3]||""), pubDate: String(row[4]||""), summary: String(row[7]||""), score: Number(row[8])||0, stars: String(row[9]||"") });
     }
   });
@@ -489,9 +490,9 @@ function generateMonthlyReport() {
     targetMonthStr = Utilities.formatDate(now, "Asia/Tokyo", "yyyy年M月");
     data.forEach(function(row) {
       if (!row[1] || row[10] !== "済") return;
-      var fetchedAt = new Date(row[5]);
-      if (isNaN(fetchedAt)) return;
-      if (fetchedAt.getFullYear() === now.getFullYear() && fetchedAt.getMonth() === now.getMonth()) {
+      var pubDate = new Date(row[4]);
+      if (isNaN(pubDate)) return;
+      if (pubDate.getFullYear() === now.getFullYear() && pubDate.getMonth() === now.getMonth()) {
         articles.push({ category: String(row[0]||""), title: String(row[1]||""), url: String(row[2]||""), source: String(row[3]||""), pubDate: String(row[4]||""), summary: String(row[7]||""), score: Number(row[8])||0, stars: String(row[9]||"") });
       }
     });
@@ -599,7 +600,8 @@ function getArticlesData() {
     });
   });
 
-  articles.sort(function(a, b) { return (b.fetchedAt > a.fetchedAt) ? 1 : -1; });
+  // 公開日の新しい順にソート
+  articles.sort(function(a, b) { return (b.pubDate > a.pubDate) ? 1 : (b.pubDate < a.pubDate) ? -1 : 0; });
   return articles;
 }
 

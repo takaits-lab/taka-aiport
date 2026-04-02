@@ -168,21 +168,24 @@
   .sidebar-close{display:none;position:absolute;top:12px;right:12px;background:none;border:none;font-size:22px;color:var(--gray-600);cursor:pointer;padding:4px 8px;line-height:1}
 
   /* ===== スマホ対応（JSクラス .mobile で適用） ===== */
+  /* ベースフォントサイズを拡大 */
+  .mobile body{font-size:16px}
+
   /* ハンバーガーボタン表示 */
   .mobile .menu-btn{display:block}
   .mobile .sidebar-close{display:block}
 
   /* ヘッダー */
   .mobile .header{padding:0 12px;height:52px}
-  .mobile .header-title{font-size:14px}
+  .mobile .header-title{font-size:16px}
   .mobile .header-sub{display:none}
   .mobile .keyword-badge{display:none}
-  .mobile .loading-badge{font-size:10px}
+  .mobile .loading-badge{font-size:12px}
 
   /* タブバー */
   .mobile .tab-bar{padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;gap:0}
   .mobile .tab-bar::-webkit-scrollbar{display:none}
-  .mobile .tab-btn{padding:10px 14px;font-size:12px;flex-shrink:0}
+  .mobile .tab-btn{padding:12px 16px;font-size:14px;flex-shrink:0}
 
   /* レイアウト：サイドバーを非表示にして1カラム */
   .mobile .layout{grid-template-columns:1fr}
@@ -191,53 +194,65 @@
   /* サイドバー：オーバーレイモード */
   .mobile .sidebar.open{display:block;position:fixed;top:0;left:0;width:280px;height:100vh;z-index:201;padding-top:52px;box-shadow:4px 0 20px rgba(0,0,0,.15);overflow-y:auto}
   .mobile .sidebar-overlay.open{display:block}
+  .mobile .filter-btn{font-size:14px;padding:10px 12px}
+  .mobile .sidebar-label{font-size:12px}
+  .mobile .period-select{font-size:14px;padding:10px 12px}
 
   /* メインエリア */
   .mobile .main{padding:16px 12px}
-  .mobile .main-title{font-size:16px}
+  .mobile .main-title{font-size:20px}
+  .mobile .main-count{font-size:14px}
 
   /* 統計カード */
   .mobile .stats-bar{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
-  .mobile .stat-card{padding:10px 12px}
-  .mobile .stat-value{font-size:18px}
-  .mobile .stat-label{font-size:9px}
+  .mobile .stat-card{padding:12px 14px}
+  .mobile .stat-value{font-size:22px}
+  .mobile .stat-label{font-size:12px}
+  .mobile .stat-sub{font-size:12px}
 
   /* 記事カード */
-  .mobile .article-card{padding:14px 14px;border-radius:10px}
-  .mobile .card-title{font-size:13.5px}
-  .mobile .card-source{font-size:10px}
-  .mobile .summary-box{padding:8px 10px}
-  .mobile .summary-text{font-size:11.5px}
-  .mobile .cat-tag{font-size:10px;padding:2px 6px}
-  .mobile .date-text{font-size:10px}
-  .mobile .stars-text{font-size:12px}
-  .mobile .relevance-label{font-size:9px}
-  .mobile .bar-track{width:50px}
-  .mobile .relevance-pct{font-size:10px}
+  .mobile .article-card{padding:16px 14px;border-radius:10px}
+  .mobile .card-title{font-size:16px;line-height:1.6}
+  .mobile .card-source{font-size:13px}
+  .mobile .summary-box{padding:10px 12px}
+  .mobile .summary-text{font-size:14px;line-height:2}
+  .mobile .cat-tag{font-size:12px;padding:3px 8px}
+  .mobile .date-text{font-size:12px}
+  .mobile .stars-text{font-size:15px}
+  .mobile .relevance-label{font-size:12px}
+  .mobile .bar-track{width:60px}
+  .mobile .relevance-pct{font-size:13px}
+  .mobile .unprocessed-note{font-size:13px}
+  .mobile .new-badge{font-size:11px;padding:3px 8px}
 
   /* レポート */
   .mobile .report-wrap{max-width:100%}
   .mobile .report-header{flex-wrap:wrap;gap:12px}
-  .mobile .report-title{font-size:18px}
-  .mobile .report-section{padding:16px 14px;border-radius:10px}
-  .mobile .report-section-title{font-size:14px}
-  .mobile .trend-text{font-size:13px}
-  .mobile .cat-bar-name{width:100px;font-size:12px}
-  .mobile .cat-bar-count{font-size:11px}
-  .mobile .rec-title{font-size:12px}
-  .mobile .rec-detail{font-size:11px}
-  .mobile .pickup-item{padding:10px 12px}
-  .mobile .pickup-title{font-size:12px}
-  .mobile .pickup-summary{font-size:11px}
+  .mobile .report-title{font-size:20px}
+  .mobile .report-meta{font-size:14px}
+  .mobile .report-section{padding:18px 14px;border-radius:10px}
+  .mobile .report-section-title{font-size:17px}
+  .mobile .trend-text{font-size:15px}
+  .mobile .cat-bar-name{width:110px;font-size:14px}
+  .mobile .cat-bar-count{font-size:13px}
+  .mobile .topic-chip{font-size:14px;padding:6px 16px}
+  .mobile .rec-title{font-size:15px}
+  .mobile .rec-detail{font-size:14px}
+  .mobile .pickup-item{padding:12px 14px}
+  .mobile .pickup-title{font-size:15px}
+  .mobile .pickup-summary{font-size:14px}
+  .mobile .priority-badge{font-size:12px}
 
   /* ガイド */
   .mobile .guide-wrap{max-width:100%}
-  .mobile .guide-section{padding:16px 14px;border-radius:10px}
-  .mobile .guide-section-title{font-size:14px}
-  .mobile .guide-text{font-size:12.5px}
-  .mobile .guide-step-desc{font-size:11.5px}
-  .mobile .guide-card{padding:12px 12px}
-  .mobile .guide-card-desc{font-size:11.5px}
+  .mobile .guide-section{padding:18px 14px;border-radius:10px}
+  .mobile .guide-section-title{font-size:17px}
+  .mobile .guide-text{font-size:15px}
+  .mobile .guide-step-title{font-size:15px}
+  .mobile .guide-step-desc{font-size:14px}
+  .mobile .guide-card{padding:14px 14px}
+  .mobile .guide-card-title{font-size:15px}
+  .mobile .guide-card-desc{font-size:14px}
 </style>
 </head>
 <body>
@@ -252,10 +267,6 @@
     </div>
   </div>
   <div class="header-right">
-    <div class="keyword-badge">
-      <span class="kw-dot"></span>
-      <span id="active-kw-label">読み込み中...</span>
-    </div>
     <div class="loading-badge" id="last-updated"></div>
   </div>
 </header>
@@ -286,9 +297,9 @@
         <div class="sidebar-label">期間</div>
         <select class="period-select" onchange="filterByPeriod(this.value)">
           <option value="7">直近1週間</option>
-          <option value="30">直近1ヶ月</option>
+          <option value="30" selected>直近1ヶ月</option>
           <option value="90">直近3ヶ月</option>
-          <option value="0">すべて</option>
+          <option value="0">すべて（古い記事含む）</option>
         </select>
       </div>
       <div class="sidebar-section">
@@ -695,7 +706,7 @@
 var allArticles   = [];
 var keywords      = [];
 var currentCat    = 'all';
-var currentPeriod = 7;
+var currentPeriod = 30;
 var currentStars  = 'all-stars';
 
 var CAT_COLORS = {
@@ -752,9 +763,10 @@ function reloadKeywords(){
 }
 
 function updateActiveKwLabel(){
+  var el=document.getElementById('active-kw-label');
+  if(!el)return;
   var active=keywords.filter(function(k){return k.status==='有効';});
-  document.getElementById('active-kw-label').textContent=
-    active.length>0?active.map(function(k){return k.keyword;}).join(' / '):'（なし）';
+  el.textContent=active.length>0?active.map(function(k){return k.keyword;}).join(' / '):'（なし）';
 }
 
 function buildCategoryFilters(){
@@ -797,7 +809,7 @@ function renderArticles(){
     if(currentCat!=='all'&&a.category!==currentCat)return false;
     if(currentStars!=='all-stars'&&a.stars!==currentStars)return false;
     if(currentPeriod>0){
-      var d=new Date(a.fetchedAt||a.pubDate);
+      var d=new Date(a.pubDate);
       if(isNaN(d)||(now-d)/(1000*60*60*24)>currentPeriod)return false;
     }
     return true;
@@ -1006,15 +1018,29 @@ function fmtDate(str){
   return y+'年'+m+'月'+day+'日';
 }
 
-// スマホ判定（GASのiframe内ではメディアクエリが効かないためJSで判定）
+// スマホ判定（GASのiframe内ではviewport幅が信用できないためUserAgentで判定）
 function checkMobile(){
-  var isMobile = window.innerWidth <= 768 || screen.width <= 768 ||
-    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if(isMobile) document.body.classList.add('mobile');
-  else document.body.classList.remove('mobile');
+  var ua = navigator.userAgent || '';
+  var isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  if(isMobile){
+    document.body.classList.add('mobile');
+    // GASのiframeはPC幅で描画されるため、viewportを強制的にデバイス幅に設定
+    var vp = document.querySelector('meta[name="viewport"]');
+    if(vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
+    // iframeの親がviewportを制御している場合のフォールバック
+    try {
+      var actualWidth = Math.min(screen.width, screen.availWidth) || 375;
+      var iframeWidth = window.innerWidth || document.documentElement.clientWidth || 980;
+      if(iframeWidth > actualWidth * 1.5){
+        var scale = actualWidth / iframeWidth;
+        document.body.style.zoom = scale;
+      }
+    } catch(e){}
+  } else {
+    document.body.classList.remove('mobile');
+  }
 }
 checkMobile();
-window.addEventListener('resize', checkMobile);
 
 // サイドバー開閉
 function toggleSidebar(){
