@@ -20,43 +20,69 @@ function fetchAndStoreArticles() {
 
   if (keywords.length === 0) {
     Logger.log("有効なキーワードがありません。");
+    cleanupFetchTrigger();
     return;
   }
 
-  var newRowCount = 0;
+  // 前回の途中再開位置を取得
+  var startIdx = parseInt(PropertiesService.getScriptProperties().getProperty("FETCH_START_IDX") || "0", 10);
+  var startTime = new Date().getTime();
+  var TIME_LIMIT = 5 * 60 * 1000; // 5分で安全に止める
+  var newRows = [];
+  var nowStr = getNow();
 
-  keywords.forEach(function(kw) {
+  for (var i = startIdx; i < keywords.length; i++) {
+    if (new Date().getTime() - startTime > TIME_LIMIT) {
+      // 溜まった行をまとめて書き込み
+      if (newRows.length > 0) {
+        dbSheet.getRange(dbSheet.getLastRow() + 1, 1, newRows.length, 11).setValues(newRows);
+      }
+      Logger.log("時間制限に到達。処理済みキーワード: " + (i - startIdx) + "件, 新規記事: " + newRows.length + "件, 残り: " + (keywords.length - i) + "キーワード");
+      PropertiesService.getScriptProperties().setProperty("FETCH_START_IDX", String(i));
+      // 自動継続トリガー設定
+      cleanupFetchTrigger();
+      var trigger = ScriptApp.newTrigger("fetchAndStoreArticles").timeBased().after(10 * 1000).create();
+      PropertiesService.getScriptProperties().setProperty("FETCH_TRIGGER_ID", trigger.getUniqueId());
+      Logger.log("10秒後に自動継続トリガーを設定しました。");
+      return;
+    }
+
+    var kw = keywords[i];
     Logger.log("取得中: " + kw.keyword);
     var articles = fetchGoogleNewsRss(kw.keyword);
 
     articles.forEach(function(article) {
       if (existingUrls.indexOf(article.url) !== -1) return;
-
-      dbSheet.appendRow([
-        kw.category,
-        article.title,
-        article.url,
-        article.source,
-        article.pubDate,
-        getNow(),
-        kw.keyword,
-        "",
-        "",
-        "",
-        "",
-      ]);
-
+      newRows.push([kw.category, article.title, article.url, article.source, article.pubDate, nowStr, kw.keyword, "", "", "", ""]);
       existingUrls.push(article.url);
-      newRowCount++;
     });
 
-    Utilities.sleep(1000);
-  });
+    Utilities.sleep(500);
+  }
 
-  Logger.log("Google News 新規追記件数: " + newRowCount + "件");
+  // 溜まった行をまとめて書き込み
+  if (newRows.length > 0) {
+    dbSheet.getRange(dbSheet.getLastRow() + 1, 1, newRows.length, 11).setValues(newRows);
+  }
+  Logger.log("Google News 新規追記件数: " + newRows.length + "件");
+
+  // 途中再開位置をリセット
+  PropertiesService.getScriptProperties().deleteProperty("FETCH_START_IDX");
+  cleanupFetchTrigger();
 
   // 海外ブログRSSフィードも取得
-  fetchDirectRssFeeds();
+  fetchDirectRssFeeds(existingUrls);
+}
+
+// fetchAndStoreArticlesの自動継続トリガーを削除
+function cleanupFetchTrigger() {
+  var triggerId = PropertiesService.getScriptProperties().getProperty("FETCH_TRIGGER_ID");
+  if (triggerId) {
+    ScriptApp.getProjectTriggers().forEach(function(t) {
+      if (t.getUniqueId() === triggerId) ScriptApp.deleteTrigger(t);
+    });
+    PropertiesService.getScriptProperties().deleteProperty("FETCH_TRIGGER_ID");
+  }
 }
 
 function fetchGoogleNewsRss(keyword) {
@@ -100,11 +126,12 @@ var RSS_FEEDS = [
   { url: "https://openai.com/blog/rss.xml",          source: "OpenAI Blog",         category: "LLM・基盤モデル" },
 ];
 
-function fetchDirectRssFeeds() {
+function fetchDirectRssFeeds(existingUrls) {
   var ss      = SpreadsheetApp.openById(SPREADSHEET_ID);
   var dbSheet = ss.getSheetByName(SHEET_DB);
-  var existingUrls = getExistingUrls(dbSheet);
-  var newRowCount  = 0;
+  if (!existingUrls) existingUrls = getExistingUrls(dbSheet);
+  var newRows = [];
+  var nowStr  = getNow();
 
   RSS_FEEDS.forEach(function(feed) {
     try {
@@ -118,26 +145,14 @@ function fetchDirectRssFeeds() {
       var root = doc.getRootElement();
       var ns   = root.getNamespace();
 
-      var items = [];
       // RSS 2.0形式
       var channel = root.getChild("channel");
       if (channel) {
-        items = channel.getChildren("item");
-        items.forEach(function(item) {
+        channel.getChildren("item").forEach(function(item) {
           var articleUrl = item.getChildText("link") || "";
           if (!articleUrl || existingUrls.indexOf(articleUrl) !== -1) return;
-          dbSheet.appendRow([
-            feed.category,
-            item.getChildText("title") || "",
-            articleUrl,
-            feed.source,
-            formatPubDate(item.getChildText("pubDate") || ""),
-            getNow(),
-            feed.source,
-            "", "", "", ""
-          ]);
+          newRows.push([feed.category, item.getChildText("title") || "", articleUrl, feed.source, formatPubDate(item.getChildText("pubDate") || ""), nowStr, feed.source, "", "", "", ""]);
           existingUrls.push(articleUrl);
-          newRowCount++;
         });
       }
       // Atom形式
@@ -152,18 +167,8 @@ function fetchDirectRssFeeds() {
           });
           if (!articleUrl || existingUrls.indexOf(articleUrl) !== -1) return;
           var pubDate = entry.getChildText("published", ns) || entry.getChildText("updated", ns) || "";
-          dbSheet.appendRow([
-            feed.category,
-            entry.getChildText("title", ns) || "",
-            articleUrl,
-            feed.source,
-            formatPubDate(pubDate),
-            getNow(),
-            feed.source,
-            "", "", "", ""
-          ]);
+          newRows.push([feed.category, entry.getChildText("title", ns) || "", articleUrl, feed.source, formatPubDate(pubDate), nowStr, feed.source, "", "", "", ""]);
           existingUrls.push(articleUrl);
-          newRowCount++;
         });
       }
 
@@ -174,7 +179,11 @@ function fetchDirectRssFeeds() {
     }
   });
 
-  Logger.log("海外RSSフィード取得完了。新規: " + newRowCount + "件");
+  // まとめて書き込み
+  if (newRows.length > 0) {
+    dbSheet.getRange(dbSheet.getLastRow() + 1, 1, newRows.length, 11).setValues(newRows);
+  }
+  Logger.log("海外RSSフィード取得完了。新規: " + newRows.length + "件");
 }
 
 function getActiveKeywords(sheet) {
