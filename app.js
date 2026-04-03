@@ -28,6 +28,7 @@ var currentCat    = 'all';
 var currentPeriod = 30;
 var currentStars  = 'all-stars';
 var currentPage   = 1;
+var currentSearch = '';
 var PAGE_SIZE     = 30;
 
 // カテゴリーの色定義
@@ -48,8 +49,39 @@ function getCatColor(cat) {
   return CAT_COLORS[cat] || {bg:'#f0efe9',text:'#6b6960',dot:'#a09e93'};
 }
 
+// ===== 管理者パスワード認証 =====
+var ADMIN_PASS_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // "password" のSHA-256（後で変更）
+function isAdminAuth() { return sessionStorage.getItem('ai-dashboard-admin') === '1'; }
+function setAdminAuth() { sessionStorage.setItem('ai-dashboard-admin', '1'); }
+async function sha256(str) {
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+async function promptAdminAuth(callback) {
+  if (isAdminAuth()) { callback(); return; }
+  var pass = prompt('管理者パスワードを入力してください');
+  if (!pass) return;
+  var hash = await sha256(pass);
+  if (hash === ADMIN_PASS_HASH) {
+    setAdminAuth();
+    callback();
+  } else {
+    alert('パスワードが違います');
+  }
+}
+
 // ===== タブ切り替え =====
 function switchTab(tab, btn) {
+  // 管理者マニュアルはパスワード必要
+  if (tab === 'admin') {
+    promptAdminAuth(function() {
+      doSwitchTab(tab, btn);
+    });
+    return;
+  }
+  doSwitchTab(tab, btn);
+}
+function doSwitchTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
   document.getElementById('tab-articles').style.display = tab === 'articles' ? '' : 'none';
@@ -164,6 +196,12 @@ function renderArticles() {
       var d = new Date(a.pubDate);
       if (isNaN(d) || (now - d) / (1000 * 60 * 60 * 24) > currentPeriod) return false;
     }
+    // キーワード検索
+    if (currentSearch) {
+      var q = currentSearch.toLowerCase();
+      var text = (a.title + ' ' + a.source + ' ' + a.summary + ' ' + a.keyword).toLowerCase();
+      if (text.indexOf(q) === -1) return false;
+    }
     return true;
   });
   // 公開日の新しい順にソート
@@ -266,8 +304,11 @@ function renderKeywords() {
   document.getElementById('kw-list').innerHTML = html;
 }
 
-// キーワード追加
+// キーワード追加（管理者認証必要）
 function addNewKeyword() {
+  promptAdminAuth(function() { doAddNewKeyword(); });
+}
+function doAddNewKeyword() {
   var input = document.getElementById('new-kw-input');
   var kw = input.value.trim();
   var catSelect = document.getElementById('new-kw-cat');
@@ -294,9 +335,11 @@ function addNewKeyword() {
 
 // キーワード有効/無効切り替え
 function toggleKw(rowIndex, newStatus) {
-  gasPost({ action: 'toggleKeyword', rowIndex: rowIndex, status: newStatus })
-    .then(function() { reloadKeywords(); })
-    .catch(function(err) { alert('切替失敗：' + (err.message || String(err))); });
+  promptAdminAuth(function() {
+    gasPost({ action: 'toggleKeyword', rowIndex: rowIndex, status: newStatus })
+      .then(function() { reloadKeywords(); })
+      .catch(function(err) { alert('切替失敗：' + (err.message || String(err))); });
+  });
 }
 
 // ===== フィルター操作 =====
@@ -309,6 +352,11 @@ function filterByCategory(cat, btn) {
 
 function filterByPeriod(val) {
   currentPeriod = parseInt(val); currentPage = 1;
+  renderArticles();
+}
+
+function filterBySearch(val) {
+  currentSearch = val.trim(); currentPage = 1;
   renderArticles();
 }
 

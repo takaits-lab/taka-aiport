@@ -166,6 +166,10 @@ body{
 .page-btn.active{background:var(--navy);color:white;border-color:var(--navy);font-weight:700}
 .page-btn:disabled{opacity:.3;cursor:not-allowed}
 
+/* 検索欄 */
+.search-input{width:100%;padding:0.6rem 0.75rem;border:1px solid var(--gray-200);border-radius:8px;font-size:0.875rem;font-family:'Noto Sans JP',sans-serif;color:var(--gray-800);background:white;margin-top:8px}
+.search-input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 2px rgba(26,39,68,.1)}
+
 /* ===== 月次レポート ===== */
 .report-wrap{max-width:100%;margin:0 auto}
 .report-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
