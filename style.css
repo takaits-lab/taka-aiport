@@ -159,6 +159,13 @@ body{
 .empty{text-align:center;padding:60px;color:var(--gray-400)}
 .error-box{background:#fff0f0;border:1px solid #f5c6c6;border-radius:8px;padding:16px;color:#c0392b;font-size:0.75rem}
 
+/* ページネーション */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:20px;padding:16px 0;flex-wrap:wrap}
+.page-btn{min-width:36px;height:36px;border:1px solid var(--gray-200);border-radius:8px;background:white;color:var(--gray-800);font-size:0.875rem;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .15s}
+.page-btn:hover:not(:disabled){background:var(--navy);color:white;border-color:var(--navy)}
+.page-btn.active{background:var(--navy);color:white;border-color:var(--navy);font-weight:700}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
+
 /* ===== 月次レポート ===== */
 .report-wrap{max-width:100%;margin:0 auto}
 .report-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}

@@ -27,6 +27,8 @@ var keywords      = [];
 var currentCat    = 'all';
 var currentPeriod = 30;
 var currentStars  = 'all-stars';
+var currentPage   = 1;
+var PAGE_SIZE     = 30;
 
 // カテゴリーの色定義
 var CAT_COLORS = {
@@ -172,16 +174,24 @@ function renderArticles() {
     return db - da;
   });
 
-  document.getElementById('article-count').textContent =
-    filtered.length + '件' + (currentPeriod > 0 ? '（直近' + currentPeriod + '日）' : '');
+  // ページネーション計算
+  var totalCount = filtered.length;
+  var totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  if (currentPage > totalPages) currentPage = totalPages || 1;
+  var startIdx = (currentPage - 1) * PAGE_SIZE;
+  var pageItems = filtered.slice(startIdx, startIdx + PAGE_SIZE);
 
-  if (filtered.length === 0) {
+  document.getElementById('article-count').textContent =
+    totalCount + '件' + (currentPeriod > 0 ? '（直近' + currentPeriod + '日）' : '') +
+    (totalPages > 1 ? '　' + currentPage + '/' + totalPages + 'ページ' : '');
+
+  if (totalCount === 0) {
     document.getElementById('articles-container').innerHTML = '<div class="empty">該当する記事がありません。</div>';
     return;
   }
 
   var html = '<div class="articles">';
-  filtered.forEach(function(a) {
+  pageItems.forEach(function(a) {
     var todayStr = now.getFullYear() + '/' + ('0' + (now.getMonth() + 1)).slice(-2) + '/' + ('0' + now.getDate()).slice(-2);
     var isNew = a.fetchedAt && a.fetchedAt.slice(0, 10) === todayStr;
     var c = getCatColor(a.category);
@@ -209,7 +219,34 @@ function renderArticles() {
       '</div></div>';
   });
   html += '</div>';
+
+  // ページネーションバー
+  if (totalPages > 1) {
+    html += '<div class="pagination">';
+    html += '<button class="page-btn" onclick="goPage(1)"' + (currentPage === 1 ? ' disabled' : '') + '>«</button>';
+    html += '<button class="page-btn" onclick="goPage(' + (currentPage - 1) + ')"' + (currentPage === 1 ? ' disabled' : '') + '>‹</button>';
+
+    // 表示するページ番号の範囲
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(totalPages, startPage + 4);
+    if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+    for (var p = startPage; p <= endPage; p++) {
+      html += '<button class="page-btn' + (p === currentPage ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+    }
+
+    html += '<button class="page-btn" onclick="goPage(' + (currentPage + 1) + ')"' + (currentPage === totalPages ? ' disabled' : '') + '>›</button>';
+    html += '<button class="page-btn" onclick="goPage(' + totalPages + ')"' + (currentPage === totalPages ? ' disabled' : '') + '>»</button>';
+    html += '</div>';
+  }
+
   document.getElementById('articles-container').innerHTML = html;
+}
+
+function goPage(page) {
+  currentPage = page;
+  renderArticles();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ===== キーワード管理 =====
@@ -264,19 +301,19 @@ function toggleKw(rowIndex, newStatus) {
 
 // ===== フィルター操作 =====
 function filterByCategory(cat, btn) {
-  currentCat = cat;
+  currentCat = cat; currentPage = 1;
   document.querySelectorAll('#category-filters .filter-btn').forEach(function(b) { b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
   renderArticles();
 }
 
 function filterByPeriod(val) {
-  currentPeriod = parseInt(val);
+  currentPeriod = parseInt(val); currentPage = 1;
   renderArticles();
 }
 
 function filterByStars(stars, btn) {
-  currentStars = stars;
+  currentStars = stars; currentPage = 1;
   document.querySelectorAll('.sidebar-section .filter-btn[onclick*="filterByStars"]').forEach(function(b) { b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
   renderArticles();
