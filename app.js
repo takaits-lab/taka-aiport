@@ -50,7 +50,7 @@ function getCatColor(cat) {
 }
 
 // ===== 管理者パスワード認証 =====
-var ADMIN_PASS_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // "password" のSHA-256（後で変更）
+var ADMIN_PASS_HASH = '68044a2e64d67550af650d9e55db27e1b126351d5dbdb24297eecb29cc4b9fae';
 function isAdminAuth() { return sessionStorage.getItem('ai-dashboard-admin') === '1'; }
 function setAdminAuth() { sessionStorage.setItem('ai-dashboard-admin', '1'); }
 async function sha256(str) {
